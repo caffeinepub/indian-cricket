@@ -102,6 +102,9 @@ interface GameStore extends TeamSettings {
   difficulty: Difficulty;
   setDifficulty: (d: Difficulty) => void;
 
+  userMode: "batting" | "bowling";
+  setUserMode: (m: "batting" | "bowling") => void;
+
   // Umpire
   umpireSignal: UmpireSignal;
   setUmpireSignal: (s: UmpireSignal) => void;
@@ -171,6 +174,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   difficulty: "medium",
   setDifficulty: (d) => set({ difficulty: d }),
+
+  userMode: "batting",
+  setUserMode: (m) => set({ userMode: m }),
 
   umpireSignal: "none",
   setUmpireSignal: (s) => {

@@ -27,7 +27,7 @@ function Ground() {
   return (
     <mesh ref={ref} receiveShadow>
       <planeGeometry args={[200, 200]} />
-      <meshLambertMaterial color="#166016" />
+      <meshStandardMaterial color="#1a4a10" roughness={0.95} metalness={0} />
     </mesh>
   );
 }
@@ -43,7 +43,7 @@ function Pitch() {
   return (
     <mesh ref={ref} receiveShadow>
       <boxGeometry args={[3, 0.06, 20]} />
-      <meshLambertMaterial color="#c8a85a" />
+      <meshStandardMaterial color="#c4a265" roughness={0.8} metalness={0} />
     </mesh>
   );
 }
@@ -113,7 +113,6 @@ function BallTrail({
   useFrame(() => {
     const pts = trailPoints.current;
     if (pts.length < 2 || !lineRef.current) return;
-    // Line component re-renders via points prop; we just need parent to update
   });
 
   const pts = trailPoints.current;
@@ -143,6 +142,7 @@ function CricketBall() {
   const wideHandledRef = useRef(false);
   const stumpingHandledRef = useRef(false);
   const midSwingAppliedRef = useRef(false);
+  // meshRef points to the inner ball mesh for seam spin rotation
   const meshRef = useRef<THREE.Mesh>(null);
   const prevBallY = useRef(1.5);
   const bounceHandledRef = useRef(false);
@@ -195,7 +195,8 @@ function CricketBall() {
     }
   }, [ballState]);
 
-  const [ref, api] = useSphere<THREE.Mesh>(() => ({
+  // Use GROUP for physics so seam ring moves with the ball
+  const [ref, api] = useSphere<THREE.Group>(() => ({
     mass: 0.15,
     position: [0, 1.5, -7] as [number, number, number],
     args: [0.15],
@@ -204,9 +205,9 @@ function CricketBall() {
     material: { friction: 0.4, restitution: 0.65 },
   }));
 
-  const combinedRef = (node: THREE.Mesh | null) => {
-    (ref as React.MutableRefObject<THREE.Mesh | null>).current = node;
-    meshRef.current = node;
+  // combinedRef applies the cannon physics ref to a group
+  const combinedRef = (node: THREE.Group | null) => {
+    (ref as React.MutableRefObject<THREE.Group | null>).current = node;
   };
 
   useEffect(() => {
@@ -275,43 +276,40 @@ function CricketBall() {
         // Seam movement: random horizontal drift on first bounce
         const seamDrift = (Math.random() - 0.5) * 0.4;
 
+        // Increased Z velocities so ball reliably reaches the batsman
         if (variant === "swing_in") {
-          api.velocity.set(0.8 + seamDrift, vyBase, 10 * vzMult * speedMult);
+          api.velocity.set(0.8 + seamDrift, vyBase, 16 * vzMult * speedMult);
           api.angularVelocity.set(0, 2, 0);
         } else if (variant === "swing_out") {
-          api.velocity.set(-0.8 + seamDrift, vyBase, 10 * vzMult * speedMult);
+          api.velocity.set(-0.8 + seamDrift, vyBase, 16 * vzMult * speedMult);
           api.angularVelocity.set(0, -2, 0);
         } else if (variant === "yorker") {
-          api.velocity.set(randomX, 0.8, 13 * vzMult * speedMult);
+          api.velocity.set(randomX, 0.8, 18 * vzMult * speedMult);
         } else if (variant === "bouncer") {
-          api.velocity.set(randomX + seamDrift, 6.5, 9 * vzMult * speedMult);
+          api.velocity.set(randomX + seamDrift, 6.5, 14 * vzMult * speedMult);
         } else if (variant === "offspin") {
-          api.velocity.set(0.4 + seamDrift, vyBase, 10 * vzMult * speedMult);
+          api.velocity.set(0.4 + seamDrift, vyBase, 15 * vzMult * speedMult);
           api.angularVelocity.set(3, 0, 0);
         } else if (variant === "legspin") {
-          api.velocity.set(-0.4 + seamDrift, vyBase, 10 * vzMult * speedMult);
+          api.velocity.set(-0.4 + seamDrift, vyBase, 15 * vzMult * speedMult);
           api.angularVelocity.set(-3, 0, 0);
         } else {
           api.velocity.set(
             randomX + seamDrift,
             vyBase,
-            10 * vzMult * speedMult,
+            16 * vzMult * speedMult,
           );
         }
-      }, 450);
+      }, 2400);
 
       deadTimerRef.current = setTimeout(() => {
         if (ballStateRef.current === "bowled" && !wicketHandledRef.current) {
+          // Ball timed out without hitting stumps - just reset (dot ball)
           wicketHandledRef.current = true;
-          stumpsFallenRef.current = true;
-          useGameStore.getState().takeWicket();
           ballStateRef.current = "dead";
-          setTimeout(() => {
-            stumpsFallenRef.current = false;
-            useGameStore.getState().resetBall();
-          }, 2500);
+          useGameStore.getState().resetBall();
         }
-      }, 4500);
+      }, 7000);
 
       return () => clearTimeout(throwTimer);
     } else if (ballState === "hit") {
@@ -338,7 +336,7 @@ function CricketBall() {
     const state = ballStateRef.current;
     const pos = posRef.current;
 
-    // Seam spin: rotate ball mesh visually
+    // Seam spin: rotate inner ball mesh visually
     if (meshRef.current && (state === "bowled" || state === "hit")) {
       meshRef.current.rotation.x += delta * 15;
     }
@@ -360,7 +358,6 @@ function CricketBall() {
     const ballY = pos[1];
     if (state === "bowled" && !bounceHandledRef.current) {
       if (prevBallY.current > ballY + 0.05 && ballY < 0.25 && ballY > 0) {
-        // Ball just hit the ground
         bounceHandledRef.current = true;
         spawnDust(pos[0], pos[1], pos[2]);
         setTimeout(() => {
@@ -376,13 +373,13 @@ function CricketBall() {
       }
     }
 
-    // Mid-flight swing impulse
+    // Mid-flight swing impulse - updated zone to match faster ball
     if (
       state === "bowled" &&
       !midSwingAppliedRef.current &&
       !swingAppliedRef.current &&
       pos[2] > -1 &&
-      pos[2] < 1
+      pos[2] < 4
     ) {
       const variant = bowlingVariantRef.current;
       if (variant === "swing_in") {
@@ -523,7 +520,7 @@ function CricketBall() {
       !wideHandledRef.current &&
       !swingAppliedRef.current &&
       pos[2] > 9.5 &&
-      Math.abs(pos[0]) > 2.5
+      Math.abs(pos[0]) > 2.0
     ) {
       wideHandledRef.current = true;
       wicketHandledRef.current = true;
@@ -537,21 +534,33 @@ function CricketBall() {
       setTimeout(() => useGameStore.getState().resetBall(), 1800);
     }
 
-    if (state === "bowled" && pos[2] > 9.5 && !wicketHandledRef.current) {
+    if (
+      state === "bowled" &&
+      pos[2] > 9.0 &&
+      !wicketHandledRef.current &&
+      !wideHandledRef.current
+    ) {
+      const inStumpCorridor = Math.abs(pos[0]) < 0.45 && pos[1] < 1.0;
       wicketHandledRef.current = true;
       ballStateRef.current = "dead";
-      stumpsFallenRef.current = true;
       if (deadTimerRef.current) {
         clearTimeout(deadTimerRef.current);
         deadTimerRef.current = null;
       }
-      const wasStumping =
-        swingAppliedRef.current && timingQualityRef.current === "miss";
-      useGameStore.getState().takeWicket(wasStumping ? "STUMPED" : undefined);
-      setTimeout(() => {
-        stumpsFallenRef.current = false;
-        useGameStore.getState().resetBall();
-      }, 2500);
+      if (inStumpCorridor) {
+        // Ball hit stumps - bowled out
+        stumpsFallenRef.current = true;
+        const wasStumping =
+          swingAppliedRef.current && timingQualityRef.current === "miss";
+        useGameStore.getState().takeWicket(wasStumping ? "STUMPED" : undefined);
+        setTimeout(() => {
+          stumpsFallenRef.current = false;
+          useGameStore.getState().resetBall();
+        }, 2500);
+      } else {
+        // Ball missed stumps - dot ball, batsman survives
+        setTimeout(() => useGameStore.getState().resetBall(), 500);
+      }
     }
 
     if ((state === "bowled" || state === "hit") && pos[1] < -4) {
@@ -566,16 +575,28 @@ function CricketBall() {
 
   return (
     <group>
-      {/* Cricket red ball with seam */}
-      <mesh ref={combinedRef} castShadow>
-        <sphereGeometry args={[0.15, 20, 20]} />
-        <meshStandardMaterial color="#B22222" roughness={0.6} metalness={0.1} />
-      </mesh>
-      {/* Seam line */}
-      <mesh>
-        <torusGeometry args={[0.15, 0.012, 8, 24]} />
-        <meshStandardMaterial color="#ffffff" roughness={0.5} />
-      </mesh>
+      {/* Physics group: seam ring moves with the ball */}
+      <group ref={combinedRef}>
+        {/* Cricket red ball */}
+        <mesh ref={meshRef} castShadow>
+          <sphereGeometry args={[0.15, 24, 24]} />
+          <meshStandardMaterial
+            color="#cc2200"
+            roughness={0.28}
+            metalness={0.12}
+          />
+        </mesh>
+        {/* Seam - now child of physics group so it moves with ball */}
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.15, 0.013, 8, 28]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.4} />
+        </mesh>
+        {/* Second seam perpendicular */}
+        <mesh rotation={[0, Math.PI / 4, 0]}>
+          <torusGeometry args={[0.15, 0.009, 6, 28]} />
+          <meshStandardMaterial color="#ffcccc" roughness={0.5} />
+        </mesh>
+      </group>
       {/* Ball trail */}
       {trailPoints.current.length >= 2 && (
         <BallTrail trailPoints={trailPoints} />

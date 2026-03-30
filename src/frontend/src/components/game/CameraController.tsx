@@ -58,7 +58,7 @@ export default function CameraController() {
     // Camera mode transitions
     if (cameraMode.current === "delivery") {
       deliveryHoldTimer.current += delta;
-      if (deliveryHoldTimer.current > 0.7) cameraMode.current = "follow";
+      if (deliveryHoldTimer.current > 2.2) cameraMode.current = "follow";
     } else if (cameraMode.current === "loft") {
       // Stay in loft mode while ball is high in air
       if (state !== "hit" || ballY < 2) {
@@ -78,11 +78,11 @@ export default function CameraController() {
 
     switch (cameraMode.current) {
       case "delivery": {
-        targetCamPos.current.set(0.5, 2.5, -5);
-        targetLookAt.current.set(0, 1.2, -8);
+        targetCamPos.current.set(0.3, 1.9, 11.5);
+        targetLookAt.current.set(0, 1.2, -10);
         if ("fov" in camera) {
           const fovCam = camera as THREE.PerspectiveCamera;
-          fovCam.fov = THREE.MathUtils.lerp(fovCam.fov, 32, 0.1);
+          fovCam.fov = THREE.MathUtils.lerp(fovCam.fov, 55, 0.08);
           fovCam.updateProjectionMatrix();
         }
         camera.position.lerp(
@@ -169,38 +169,75 @@ export default function CameraController() {
 
       default: {
         if (state === "idle") {
-          targetCamPos.current.set(3, 3.5, 14);
-          targetLookAt.current.set(0, 0.8, 0);
+          // Behind batsman, looking toward bowler end for proper ball view
+          targetCamPos.current.set(0, 2.8, 13);
+          targetLookAt.current.set(0, 1.5, -8);
+          if ("fov" in camera) {
+            const fovCam = camera as THREE.PerspectiveCamera;
+            fovCam.fov = THREE.MathUtils.lerp(fovCam.fov, 60, 0.04);
+            fovCam.updateProjectionMatrix();
+          }
+          camera.position.lerp(
+            targetCamPos.current,
+            Math.min(lerpSpeed * 0.08, 0.15),
+          );
+          currentLookAt.current.lerp(
+            targetLookAt.current,
+            Math.min(lerpSpeed * 0.1, 0.18),
+          );
         } else if (state === "bowled") {
-          targetCamPos.current.set(bp[0] * 0.3, 3.5 + bp[1] * 0.1, 14);
-          targetLookAt.current.set(bp[0] * 0.5, bp[1] * 0.5, bp[2]);
+          // WCC-style: low behind batsman, fast tracking of ball
+          targetCamPos.current.set(0, 1.8, 13);
+          targetLookAt.current.set(bp[0] * 0.4, bp[1] * 0.5 + 0.5, bp[2]);
+          if ("fov" in camera) {
+            const fovCam = camera as THREE.PerspectiveCamera;
+            // Narrow FOV slightly for TV broadcast feel during delivery
+            fovCam.fov = THREE.MathUtils.lerp(fovCam.fov, 52, 0.08);
+            fovCam.updateProjectionMatrix();
+          }
+          // Fast snap to position, very fast lookAt to track ball
+          camera.position.lerp(
+            targetCamPos.current,
+            Math.min(lerpSpeed * 0.08, 0.15),
+          );
+          currentLookAt.current.lerp(targetLookAt.current, 0.12);
         } else if (state === "hit") {
           const shotDir = shotDirectionRef.current;
           const xOffset =
             shotDir === "offside" ? 4 : shotDir === "legside" ? -4 : 2;
           targetCamPos.current.set(
             bp[0] * 0.4 + xOffset,
-            Math.max(3.5, bp[1] + 4),
+            Math.max(4, bp[1] + 4),
             bp[2] + 9,
           );
           targetLookAt.current.set(bp[0] * 0.6, Math.max(0, bp[1] - 1), bp[2]);
+          if ("fov" in camera) {
+            const fovCam = camera as THREE.PerspectiveCamera;
+            fovCam.fov = THREE.MathUtils.lerp(fovCam.fov, 60, 0.04);
+            fovCam.updateProjectionMatrix();
+          }
+          camera.position.lerp(
+            targetCamPos.current,
+            Math.min(lerpSpeed * 0.14, 0.2),
+          );
+          currentLookAt.current.lerp(targetLookAt.current, 0.12);
         } else {
-          targetCamPos.current.set(3, 3.5, 14);
-          targetLookAt.current.set(0, 0.8, 0);
+          targetCamPos.current.set(0, 2.8, 13);
+          targetLookAt.current.set(0, 1.5, -8);
+          if ("fov" in camera) {
+            const fovCam = camera as THREE.PerspectiveCamera;
+            fovCam.fov = THREE.MathUtils.lerp(fovCam.fov, 60, 0.04);
+            fovCam.updateProjectionMatrix();
+          }
+          camera.position.lerp(
+            targetCamPos.current,
+            Math.min(lerpSpeed * 0.08, 0.15),
+          );
+          currentLookAt.current.lerp(
+            targetLookAt.current,
+            Math.min(lerpSpeed * 0.1, 0.18),
+          );
         }
-        if ("fov" in camera) {
-          const fovCam = camera as THREE.PerspectiveCamera;
-          fovCam.fov = THREE.MathUtils.lerp(fovCam.fov, 60, 0.04);
-          fovCam.updateProjectionMatrix();
-        }
-        camera.position.lerp(
-          targetCamPos.current,
-          Math.min(lerpSpeed * 0.016, 0.055),
-        );
-        currentLookAt.current.lerp(
-          targetLookAt.current,
-          Math.min(lerpSpeed * 0.024, 0.07),
-        );
         camera.lookAt(currentLookAt.current);
       }
     }

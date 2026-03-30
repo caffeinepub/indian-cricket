@@ -51,21 +51,21 @@ const TIMING_QUALITY_STYLES: Record<
 > = {
   perfect: {
     label: "PERFECT! ⚡",
-    color: "#FFD700",
-    glow: "rgba(255,215,0,0.7)",
+    color: "#F57C00",
+    glow: "rgba(245,124,0,0.7)",
   },
-  good: { label: "Good Shot", color: "#4ade80", glow: "rgba(74,222,128,0.5)" },
+  good: { label: "Good Shot", color: "#66BB6A", glow: "rgba(102,187,106,0.5)" },
   early: { label: "Early!", color: "#fbbf24", glow: "rgba(251,191,36,0.5)" },
-  miss: { label: "MISS!", color: "#f87171", glow: "rgba(248,113,113,0.6)" },
+  miss: { label: "MISS!", color: "#EF5350", glow: "rgba(239,83,80,0.6)" },
 };
 
 const UMPIRE_SIGNAL_STYLES: Record<
   string,
   { text: string; color: string; glow: string }
 > = {
-  four: { text: "FOUR!", color: "#60a5fa", glow: "rgba(96,165,250,0.7)" },
-  six: { text: "SIX!", color: "#FFD700", glow: "rgba(255,215,0,0.8)" },
-  out: { text: "OUT!", color: "#f87171", glow: "rgba(248,113,113,0.8)" },
+  four: { text: "FOUR!", color: "#00BCD4", glow: "rgba(0,188,212,0.7)" },
+  six: { text: "SIX!", color: "#F57C00", glow: "rgba(245,124,0,0.8)" },
+  out: { text: "OUT!", color: "#EF5350", glow: "rgba(239,83,80,0.8)" },
   wide: { text: "WIDE!", color: "#c084fc", glow: "rgba(192,132,252,0.7)" },
 };
 
@@ -96,12 +96,8 @@ const AUS_SQUAD = [
   { name: "C. Green", role: "all", jersey: 52 },
 ];
 
-// FieldRadar: SVG minimap showing fielder positions
-function FieldRadar({
-  primaryColor,
-}: {
-  primaryColor: string;
-}) {
+// ===== FIELD RADAR =====
+function FieldRadar({ primaryColor: _primaryColor }: { primaryColor: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -111,12 +107,12 @@ function FieldRadar({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const SIZE = 72;
+    const SIZE = 110;
     const CENTER = SIZE / 2;
 
     const worldToMap = (x: number, z: number) => ({
-      mx: CENTER + (x / 50) * (CENTER - 6),
-      my: CENTER + (z / 50) * (CENTER - 6),
+      mx: CENTER + (x / 50) * (CENTER - 8),
+      my: CENTER + (z / 50) * (CENTER - 8),
     });
 
     const draw = () => {
@@ -125,47 +121,47 @@ function FieldRadar({
       // Background circle
       ctx.beginPath();
       ctx.arc(CENTER, CENTER, CENTER - 1, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(4,12,28,0.92)";
+      ctx.fillStyle = "rgba(0,20,10,0.82)";
       ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.12)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(0,188,212,0.45)";
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Outer boundary circle
       ctx.beginPath();
-      ctx.arc(CENTER, CENTER, CENTER - 5, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.arc(CENTER, CENTER, CENTER - 6, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
       ctx.lineWidth = 0.8;
       ctx.stroke();
 
       // 30-yard circle
       ctx.beginPath();
-      ctx.arc(CENTER, CENTER, (CENTER - 5) * 0.55, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(255,255,255,0.10)";
-      ctx.lineWidth = 0.5;
+      ctx.arc(CENTER, CENTER, (CENTER - 6) * 0.55, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 0.6;
       ctx.setLineDash([2, 3]);
       ctx.stroke();
       ctx.setLineDash([]);
 
       // Pitch (center rectangle)
-      const pw = 7;
-      const ph = 22;
+      const pw = 9;
+      const ph = 28;
       ctx.fillStyle = "rgba(210,180,100,0.35)";
       ctx.fillRect(CENTER - pw / 2, CENTER - ph / 2, pw, ph);
-      ctx.strokeStyle = "rgba(255,220,120,0.4)";
-      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = "rgba(255,220,120,0.5)";
+      ctx.lineWidth = 0.6;
       ctx.strokeRect(CENTER - pw / 2, CENTER - ph / 2, pw, ph);
 
       // Crease lines
-      ctx.strokeStyle = "rgba(255,255,255,0.5)";
-      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.lineWidth = 0.7;
       ctx.beginPath();
-      ctx.moveTo(CENTER - pw / 2 - 1, CENTER + ph / 2 - 5);
-      ctx.lineTo(CENTER + pw / 2 + 1, CENTER + ph / 2 - 5);
+      ctx.moveTo(CENTER - pw / 2 - 1, CENTER + ph / 2 - 6);
+      ctx.lineTo(CENTER + pw / 2 + 1, CENTER + ph / 2 - 6);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(CENTER - pw / 2 - 1, CENTER - ph / 2 + 5);
-      ctx.lineTo(CENTER + pw / 2 + 1, CENTER - ph / 2 + 5);
+      ctx.moveTo(CENTER - pw / 2 - 1, CENTER - ph / 2 + 6);
+      ctx.lineTo(CENTER + pw / 2 + 1, CENTER - ph / 2 + 6);
       ctx.stroke();
 
       // Fielders
@@ -173,10 +169,10 @@ function FieldRadar({
       for (const fp of fielders) {
         const { mx, my } = worldToMap(fp[0], fp[2]);
         ctx.beginPath();
-        ctx.arc(mx, my, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "#60a5fa";
+        ctx.arc(mx, my, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = "#00BCD4";
         ctx.fill();
-        ctx.strokeStyle = "rgba(96,165,250,0.6)";
+        ctx.strokeStyle = "rgba(0,188,212,0.7)";
         ctx.lineWidth = 0.8;
         ctx.stroke();
       }
@@ -185,23 +181,26 @@ function FieldRadar({
       const bp = ballPositionRef.current;
       const { mx: bx, my: by } = worldToMap(bp[0], bp[2]);
       ctx.beginPath();
-      ctx.arc(bx, by, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "#f87171";
+      ctx.arc(bx, by, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#EF5350";
       ctx.fill();
-      ctx.strokeStyle = "rgba(248,113,113,0.8)";
+      ctx.strokeStyle = "rgba(239,83,80,0.9)";
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Batsman (center-bottom of pitch)
+      // Batsman (gold)
       ctx.beginPath();
-      ctx.arc(CENTER, CENTER + ph / 2 - 5, 4, 0, Math.PI * 2);
-      ctx.fillStyle = "#FFD700";
+      ctx.arc(CENTER, CENTER + ph / 2 - 6, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "#F57C00";
       ctx.fill();
+      ctx.strokeStyle = "rgba(245,124,0,0.8)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
-      // Bowler (center-top of pitch)
+      // Bowler
       ctx.beginPath();
-      ctx.arc(CENTER, CENTER - ph / 2 + 3, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,215,0,0.6)";
+      ctx.arc(CENTER, CENTER - ph / 2 + 4, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,215,0,0.55)";
       ctx.fill();
 
       rafRef.current = requestAnimationFrame(draw);
@@ -215,31 +214,98 @@ function FieldRadar({
 
   return (
     <div
-      className="flex flex-col items-center gap-1"
-      style={{ pointerEvents: "none" }}
+      className="flex flex-col items-center"
+      style={{ pointerEvents: "none", gap: 6 }}
     >
-      <div
-        className="font-body text-xs uppercase tracking-[0.2em]"
-        style={{ color: "rgba(255,255,255,0.45)", fontSize: 9 }}
-      >
-        FIELD
-      </div>
       <canvas
         ref={canvasRef}
-        width={72}
-        height={72}
+        width={110}
+        height={110}
         style={{
           borderRadius: "50%",
-          border: `1px solid ${primaryColor}55`,
-          boxShadow: `0 0 12px rgba(0,0,0,0.6), 0 0 8px ${primaryColor}22`,
+          border: "1.5px solid rgba(0,188,212,0.45)",
+          boxShadow: "0 0 16px rgba(0,188,212,0.2), 0 0 32px rgba(0,0,0,0.6)",
         }}
       />
+      {/* MOVE BATSMAN section */}
+      <div
+        className="flex flex-col items-center gap-1"
+        style={{ pointerEvents: "auto" }}
+      >
+        <div
+          style={{
+            color: "rgba(255,255,255,0.45)",
+            fontSize: 8,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+          }}
+        >
+          MOVE BATSMAN
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-ocid="game.secondary_button"
+            style={{
+              background: "rgba(0,188,212,0.12)",
+              border: "1px solid rgba(0,188,212,0.4)",
+              color: "#00BCD4",
+              borderRadius: 4,
+              width: 26,
+              height: 20,
+              cursor: "pointer",
+              fontSize: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            «
+          </button>
+          {/* Batsman silhouette icon */}
+          <div
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: "50%",
+              background: "rgba(0,188,212,0.15)",
+              border: "1px solid rgba(0,188,212,0.4)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 11,
+            }}
+          >
+            🏏
+          </div>
+          <button
+            type="button"
+            data-ocid="game.secondary_button"
+            style={{
+              background: "rgba(0,188,212,0.12)",
+              border: "1px solid rgba(0,188,212,0.4)",
+              color: "#00BCD4",
+              borderRadius: 4,
+              width: 26,
+              height: 20,
+              cursor: "pointer",
+              fontSize: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            »
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Horizontal WCC3-style timing meter
-function HorizontalTimingMeter() {
+// ===== RC24 TIMING METER =====
+function RC24TimingMeter() {
   const indicatorRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -247,7 +313,7 @@ function HorizontalTimingMeter() {
     const animate = () => {
       const v = getMeterValue();
       if (indicatorRef.current) {
-        indicatorRef.current.style.left = `calc(${v * 100}% - 5px)`;
+        indicatorRef.current.style.left = `calc(${v * 100}% - 7px)`;
       }
       rafRef.current = requestAnimationFrame(animate);
     };
@@ -259,148 +325,852 @@ function HorizontalTimingMeter() {
 
   return (
     <div
-      className="flex flex-col items-center gap-1"
-      style={{ pointerEvents: "none", width: 182 }}
+      className="flex flex-col items-center"
+      style={{ pointerEvents: "none", width: 200, gap: 2 }}
     >
+      {/* Indicator arrow above bar */}
       <div
-        className="font-body text-xs uppercase tracking-[0.25em]"
-        style={{ color: "rgba(255,255,255,0.5)", fontSize: 9 }}
-      >
-        TIMING
-      </div>
-      <div
-        className="relative rounded-full overflow-hidden"
         style={{
-          width: 182,
+          position: "relative",
+          width: 200,
           height: 14,
-          background: "rgba(0,0,0,0.6)",
+          marginBottom: 0,
+        }}
+      >
+        <div
+          ref={indicatorRef}
+          style={{
+            position: "absolute",
+            top: 2,
+            left: "50%",
+            width: 0,
+            height: 0,
+            borderLeft: "7px solid transparent",
+            borderRight: "7px solid transparent",
+            borderTop: "10px solid #ffffff",
+            filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))",
+            transition: "none",
+          }}
+        />
+      </div>
+      {/* Color bar */}
+      <div
+        style={{
+          position: "relative",
+          width: 200,
+          height: 18,
+          borderRadius: 4,
+          overflow: "hidden",
           border: "1px solid rgba(255,255,255,0.15)",
         }}
       >
-        {/* LATE left */}
+        {/* EARLY left - red */}
         <div
           style={{
             position: "absolute",
             left: 0,
             top: 0,
             bottom: 0,
-            width: "12%",
-            background: "rgba(248,113,113,0.7)",
+            width: "20%",
+            background: "rgba(239,83,80,0.85)",
           }}
         />
-        {/* EARLY left */}
+        {/* GOOD left - yellow */}
         <div
           style={{
             position: "absolute",
-            left: "12%",
+            left: "20%",
             top: 0,
             bottom: 0,
-            width: "16%",
-            background: "rgba(251,191,36,0.6)",
+            width: "15%",
+            background: "rgba(251,191,36,0.8)",
           }}
         />
-        {/* GOOD left */}
+        {/* PERFECT center - orange/amber */}
         <div
           style={{
             position: "absolute",
-            left: "28%",
+            left: "35%",
             top: 0,
             bottom: 0,
-            width: "14%",
-            background: "rgba(74,222,128,0.45)",
+            width: "30%",
+            background: "rgba(245,124,0,0.95)",
+            boxShadow: "0 0 10px rgba(245,124,0,0.7)",
           }}
         />
-        {/* PERFECT center */}
+        {/* GOOD right - yellow */}
         <div
           style={{
             position: "absolute",
-            left: "42%",
+            left: "65%",
             top: 0,
             bottom: 0,
-            width: "16%",
-            background: "rgba(74,222,128,0.85)",
-            boxShadow: "0 0 8px rgba(74,222,128,0.6)",
+            width: "15%",
+            background: "rgba(251,191,36,0.8)",
           }}
         />
-        {/* GOOD right */}
+        {/* LATE right - red */}
         <div
           style={{
             position: "absolute",
-            left: "58%",
+            left: "80%",
             top: 0,
             bottom: 0,
-            width: "14%",
-            background: "rgba(74,222,128,0.45)",
-          }}
-        />
-        {/* EARLY right */}
-        <div
-          style={{
-            position: "absolute",
-            left: "72%",
-            top: 0,
-            bottom: 0,
-            width: "16%",
-            background: "rgba(251,191,36,0.6)",
-          }}
-        />
-        {/* LATE right */}
-        <div
-          style={{
-            position: "absolute",
-            left: "88%",
-            top: 0,
-            bottom: 0,
-            width: "12%",
-            background: "rgba(248,113,113,0.7)",
-          }}
-        />
-        {/* Moving indicator */}
-        <div
-          ref={indicatorRef}
-          style={{
-            position: "absolute",
-            top: 1,
-            bottom: 1,
-            width: 10,
-            borderRadius: 3,
-            background: "#fff",
-            boxShadow: "0 0 6px #fff, 0 0 12px rgba(255,255,255,0.8)",
-            transition: "none",
+            width: "20%",
+            background: "rgba(239,83,80,0.85)",
           }}
         />
       </div>
       {/* Zone labels */}
-      <div className="flex justify-between w-full" style={{ width: 182 }}>
-        {(
-          [
-            { lbl: "LATE", color: "rgba(248,113,113,0.7)", bold: false },
-            { lbl: "EARLY", color: "rgba(251,191,36,0.7)", bold: false },
-            { lbl: "GOOD", color: "rgba(74,222,128,0.65)", bold: false },
-            { lbl: "PERFECT", color: "#4ade80", bold: true },
-            { lbl: "GOOD", color: "rgba(74,222,128,0.65)", bold: false },
-            { lbl: "EARLY", color: "rgba(251,191,36,0.7)", bold: false },
-            { lbl: "LATE", color: "rgba(248,113,113,0.7)", bold: false },
-          ] as const
-        ).map((z) => (
-          <span
-            key={z.lbl + z.color}
-            style={{
-              color: z.color,
-              fontSize: 7,
-              fontWeight: z.bold ? 700 : 400,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
-            {z.lbl}
-          </span>
-        ))}
+      <div
+        style={{
+          width: 200,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingLeft: 4,
+          paddingRight: 4,
+          marginTop: 2,
+        }}
+      >
+        <span
+          style={{
+            color: "rgba(239,83,80,0.9)",
+            fontSize: 8,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          EARLY
+        </span>
+        <span
+          style={{
+            color: "rgba(245,124,0,1)",
+            fontSize: 9,
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}
+        >
+          PERFECT
+        </span>
+        <span
+          style={{
+            color: "rgba(239,83,80,0.9)",
+            fontSize: 8,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          LATE
+        </span>
       </div>
     </div>
   );
 }
 
+// ===== D-PAD JOYSTICK =====
+function DPadJoystick({
+  onShot,
+  enabled,
+}: {
+  onShot: (dir: "legside" | "straight" | "offside") => void;
+  enabled: boolean;
+}) {
+  const SIZE = 140;
+  const C = SIZE / 2;
+  const INNER_R = 24;
+  const ARROW_R = C - 18;
+
+  const handleClick = (e: React.MouseEvent<SVGElement>) => {
+    if (!enabled) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - C;
+    const y = e.clientY - rect.top - C;
+    const dist = Math.sqrt(x * x + y * y);
+    if (dist < INNER_R) {
+      onShot("straight");
+      return;
+    }
+    const angle = Math.atan2(y, x) * (180 / Math.PI); // -180 to 180
+    if (angle > 120 || angle < -120) {
+      onShot("legside"); // left sector
+    } else if (angle > -60 && angle < 60) {
+      onShot("offside"); // right sector
+    } else {
+      onShot("straight"); // top/bottom
+    }
+  };
+
+  const handleTouch = (e: React.TouchEvent<SVGElement>) => {
+    if (!enabled) return;
+    const touch = e.changedTouches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = touch.clientX - rect.left - C;
+    const y = touch.clientY - rect.top - C;
+    const dist = Math.sqrt(x * x + y * y);
+    if (dist < INNER_R) {
+      onShot("straight");
+      return;
+    }
+    const angle = Math.atan2(y, x) * (180 / Math.PI);
+    if (angle > 120 || angle < -120) {
+      onShot("legside");
+    } else if (angle > -60 && angle < 60) {
+      onShot("offside");
+    } else {
+      onShot("straight");
+    }
+  };
+
+  // 8 directional arrow polygons
+  const directions = Array.from({ length: 8 }, (_, i) => {
+    const angleDeg = i * 45 - 90; // start from top (N)
+    const angleRad = (angleDeg * Math.PI) / 180;
+    const ax = C + Math.cos(angleRad) * ARROW_R;
+    const ay = C + Math.sin(angleRad) * ARROW_R;
+    const perpRad = angleRad + Math.PI / 2;
+    const tipX = C + Math.cos(angleRad) * (ARROW_R + 10);
+    const tipY = C + Math.sin(angleRad) * (ARROW_R + 10);
+    const b1x = ax + Math.cos(perpRad) * 7;
+    const b1y = ay + Math.sin(perpRad) * 7;
+    const b2x = ax - Math.cos(perpRad) * 7;
+    const b2y = ay - Math.sin(perpRad) * 7;
+    // Color: left arrows = blue-ish, right = teal, top/bottom = white
+    const deg = angleDeg < 0 ? angleDeg + 360 : angleDeg;
+    let color = "rgba(255,255,255,0.55)";
+    if (deg >= 157 && deg <= 270)
+      color = "rgba(100,160,255,0.7)"; // left/legside
+    else if (deg >= 0 && deg <= 112) color = "rgba(0,188,212,0.7)"; // right/offside
+    return { tipX, tipY, b1x, b1y, b2x, b2y, color, deg };
+  });
+
+  return (
+    <div
+      style={{
+        pointerEvents: enabled ? "auto" : "none",
+        opacity: enabled ? 1 : 0.5,
+      }}
+    >
+      <svg
+        width={SIZE}
+        height={SIZE}
+        role="img"
+        aria-label="Shot direction pad: tap left for leg side, right for off side, center for straight"
+        style={{ cursor: enabled ? "pointer" : "default", display: "block" }}
+        onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onShot("straight");
+        }}
+        onTouchEnd={handleTouch}
+        tabIndex={enabled ? 0 : -1}
+      >
+        {/* Outer ring */}
+        <circle
+          cx={C}
+          cy={C}
+          r={C - 2}
+          fill="rgba(0,30,15,0.80)"
+          stroke="rgba(0,188,212,0.45)"
+          strokeWidth={1.5}
+        />
+        {/* Inner glow ring */}
+        <circle
+          cx={C}
+          cy={C}
+          r={C - 8}
+          fill="none"
+          stroke="rgba(0,188,212,0.12)"
+          strokeWidth={1}
+        />
+        {/* Directional arrows */}
+        {directions.map((d) => (
+          <polygon
+            key={d.deg}
+            points={`${d.tipX},${d.tipY} ${d.b1x},${d.b1y} ${d.b2x},${d.b2y}`}
+            fill={d.color}
+          />
+        ))}
+        {/* Center circle */}
+        <circle
+          cx={C}
+          cy={C}
+          r={INNER_R}
+          fill="rgba(0,188,212,0.18)"
+          stroke="rgba(0,188,212,0.6)"
+          strokeWidth={1.5}
+        />
+        {/* Center dot */}
+        <circle cx={C} cy={C} r={5} fill="rgba(0,188,212,0.7)" />
+      </svg>
+      <div
+        style={{
+          textAlign: "center",
+          color: "rgba(255,255,255,0.35)",
+          fontSize: 8,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          marginTop: 4,
+        }}
+      >
+        LEG · STRAIGHT · OFF
+      </div>
+    </div>
+  );
+}
+
+// ===== BALL TYPE INDICATOR =====
+function BallTypeIndicator({ variant }: { variant: string }) {
+  const variantLabel = variant
+    .replace("_", " ")
+    .toUpperCase()
+    .replace("SWING IN", "IN SWINGER")
+    .replace("SWING OUT", "OUT SWINGER")
+    .replace("OFFSPIN", "OFF SPIN")
+    .replace("LEGSPIN", "LEG SPIN");
+
+  const isInswinger = variant === "swing_in";
+  const isOutswinger = variant === "swing_out";
+  const isBouncerOrYorker = variant === "bouncer" || variant === "yorker";
+
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-1.5 rounded"
+      style={{
+        background: "rgba(10,21,32,0.88)",
+        border: "1px solid rgba(0,188,212,0.35)",
+        backdropFilter: "blur(4px)",
+        pointerEvents: "none",
+      }}
+    >
+      {/* Cricket ball icon */}
+      <div
+        style={{
+          width: 20,
+          height: 20,
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 35% 35%, #c0392b, #7b0000)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          flexShrink: 0,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Seam line */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            right: 0,
+            height: 1,
+            background: "rgba(255,255,255,0.4)",
+            transform: "translateY(-50%) rotate(20deg)",
+          }}
+        />
+      </div>
+      {/* Direction arrows */}
+      {isInswinger && (
+        <span
+          style={{
+            color: "#fbbf24",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: -2,
+          }}
+        >
+          ←←
+        </span>
+      )}
+      {isOutswinger && (
+        <span
+          style={{
+            color: "#fbbf24",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: -2,
+          }}
+        >
+          →→
+        </span>
+      )}
+      {isBouncerOrYorker && (
+        <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700 }}>
+          ↕
+        </span>
+      )}
+      {!isInswinger && !isOutswinger && !isBouncerOrYorker && (
+        <span
+          style={{
+            color: "#fbbf24",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: -2,
+          }}
+        >
+          ↩↩
+        </span>
+      )}
+      {/* Label */}
+      <span
+        style={{
+          color: "#ffffff",
+          fontSize: 9,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {variantLabel}
+      </span>
+    </div>
+  );
+}
+
+// ===== VERTICAL SPEED METER =====
+function VerticalSpeedMeter({
+  speedFill,
+  speedDisplay,
+  speedColor,
+  onLock,
+  locked,
+}: {
+  speedFill: number;
+  speedDisplay: number;
+  speedColor: string;
+  onLock: () => void;
+  locked: boolean;
+}) {
+  const BAR_HEIGHT = 140;
+  const filledHeight = (speedFill / 100) * BAR_HEIGHT;
+  const arrowY = BAR_HEIGHT - filledHeight;
+
+  return (
+    <div
+      className="flex flex-col items-center gap-1"
+      style={{ pointerEvents: locked ? "none" : "auto" }}
+    >
+      <span
+        style={{
+          color: "rgba(255,255,255,0.4)",
+          fontSize: 7,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          fontWeight: 700,
+        }}
+      >
+        SPD
+      </span>
+      <div
+        style={{
+          position: "relative",
+          width: 14,
+          height: BAR_HEIGHT,
+          borderRadius: 4,
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Gradient fill from bottom */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: `${speedFill}%`,
+            background: "linear-gradient(to top, #66BB6A, #fbbf24, #EF5350)",
+            transition: locked ? "height 0.1s" : "none",
+            borderRadius: 4,
+          }}
+        />
+      </div>
+      {/* Arrow indicator - points left */}
+      <div
+        style={{
+          position: "absolute",
+          right: 18,
+          top: arrowY + 30, // 30px offset for label
+          width: 0,
+          height: 0,
+          borderTop: "6px solid transparent",
+          borderBottom: "6px solid transparent",
+          borderRight: `8px solid ${speedColor}`,
+          filter: `drop-shadow(0 0 4px ${speedColor})`,
+          transition: locked ? "top 0.1s" : "none",
+          pointerEvents: "none",
+        }}
+      />
+      <span
+        style={{
+          color: speedColor,
+          fontSize: 8,
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          textAlign: "center",
+          lineHeight: 1.2,
+        }}
+      >
+        {speedDisplay}
+        <br />
+        <span style={{ fontWeight: 400, fontSize: 7 }}>kph</span>
+      </span>
+      {!locked && (
+        <button
+          type="button"
+          data-ocid="game.toggle"
+          onClick={onLock}
+          style={{
+            background: `${speedColor}22`,
+            border: `1px solid ${speedColor}66`,
+            color: speedColor,
+            borderRadius: 4,
+            padding: "2px 4px",
+            fontSize: 7,
+            fontWeight: 700,
+            cursor: "pointer",
+            textTransform: "uppercase",
+          }}
+        >
+          LOCK
+        </button>
+      )}
+      {locked && (
+        <div
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "rgba(255,255,255,0.3)",
+            borderRadius: 4,
+            padding: "2px 4px",
+            fontSize: 7,
+            fontWeight: 700,
+            textTransform: "uppercase",
+          }}
+        >
+          ✓ SET
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== RC24 BOTTOM SCOREBAR =====
+function RCScorebar({
+  runs,
+  wickets,
+  overs,
+  balls,
+  maxOvers,
+  batsman1,
+  batsman2,
+  batsman1Runs,
+  batsman1Balls,
+  batsman2Runs,
+  batsman2Balls,
+  bowlerName,
+  bowlerOvers,
+  bowlerRuns,
+  bowlerWickets,
+  teamName,
+  opponentName,
+  lastEvent,
+  eventKey,
+}: {
+  runs: number;
+  wickets: number;
+  overs: number;
+  balls: number;
+  maxOvers: number;
+  batsman1: string;
+  batsman2: string;
+  batsman1Runs: number;
+  batsman1Balls: number;
+  batsman2Runs: number;
+  batsman2Balls: number;
+  bowlerName: string;
+  bowlerOvers: string;
+  bowlerRuns: number;
+  bowlerWickets: number;
+  teamName: string;
+  opponentName: string;
+  lastEvent: string;
+  eventKey: number;
+}) {
+  const oversDisplay = `${overs}.${balls}`;
+  const tealDivider = "rgba(0,188,212,0.35)";
+
+  return (
+    <div
+      style={{
+        background: "rgba(8,16,30,0.97)",
+        borderTop: "1.5px solid rgba(0,188,212,0.4)",
+        display: "flex",
+        alignItems: "stretch",
+        height: 52,
+        backdropFilter: "blur(8px)",
+        pointerEvents: "none",
+      }}
+    >
+      {/* LEFT PANEL: India team + batsmen */}
+      <div
+        style={{
+          flex: "0 0 auto",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "0 12px",
+          borderRight: `1.5px solid ${tealDivider}`,
+          minWidth: 0,
+        }}
+      >
+        {/* India circular badge */}
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "radial-gradient(circle at 40% 35%, #1565C0, #0D47A1)",
+            border: "2px solid rgba(0,188,212,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            boxShadow: "0 0 8px rgba(0,188,212,0.3)",
+          }}
+        >
+          <span
+            style={{
+              color: "#ffffff",
+              fontSize: 8,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0,
+            }}
+          >
+            IND
+          </span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <span
+            style={{
+              color: "#ffffff",
+              fontSize: 13,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              lineHeight: 1,
+            }}
+          >
+            IND
+          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span
+                style={{
+                  color: "#00E5FF",
+                  fontSize: 8,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                }}
+              >
+                *
+              </span>
+              <span
+                style={{
+                  color: "rgba(255,255,255,0.9)",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                }}
+              >
+                {batsman1.split(" ").pop()?.toUpperCase()}
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 8 }}>
+                {batsman1Runs}({batsman1Balls})
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span
+                style={{
+                  color: "rgba(255,255,255,0.9)",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                }}
+              >
+                {batsman2.split(" ").pop()?.toUpperCase()}
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 8 }}>
+                {batsman2Runs}({batsman2Balls})
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CENTER PANEL: Score */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 16px",
+          background: "rgba(0,188,212,0.04)",
+          borderRight: `1.5px solid ${tealDivider}`,
+          position: "relative",
+          minWidth: 160,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: 10,
+              fontWeight: 600,
+              textTransform: "uppercase",
+            }}
+          >
+            {teamName.slice(0, 3).toUpperCase()}
+          </span>
+          <span
+            style={{
+              color: "#00E5FF",
+              fontSize: 20,
+              fontWeight: 900,
+              letterSpacing: "0.05em",
+              lineHeight: 1,
+            }}
+          >
+            {runs}
+            <span style={{ color: "rgba(0,229,255,0.7)" }}>-{wickets}</span>
+          </span>
+          <span
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: 10,
+              fontWeight: 600,
+              textTransform: "uppercase",
+            }}
+          >
+            {opponentName.slice(0, 3).toUpperCase()}
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 8 }}>
+            {oversDisplay}({maxOvers}) ov
+          </span>
+          <AnimatePresence mode="popLayout">
+            {lastEvent && (
+              <motion.span
+                key={eventKey}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  color: "#F57C00",
+                  fontSize: 9,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                }}
+                data-ocid="game.toast"
+              >
+                · {lastEvent}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* RIGHT PANEL: Bowler + Australia */}
+      <div
+        style={{
+          flex: "0 0 auto",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "0 12px",
+          minWidth: 0,
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <span
+            style={{
+              color: "#ffffff",
+              fontSize: 13,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              lineHeight: 1,
+              textAlign: "right",
+            }}
+          >
+            AUS
+          </span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1,
+              alignItems: "flex-end",
+            }}
+          >
+            <span
+              style={{
+                color: "rgba(255,255,255,0.9)",
+                fontSize: 9,
+                fontWeight: 700,
+                textTransform: "uppercase",
+              }}
+            >
+              {bowlerName.split(" ").pop()?.toUpperCase()}
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 8 }}>
+              {bowlerWickets}-{bowlerRuns}({bowlerOvers})
+            </span>
+          </div>
+        </div>
+        {/* Australia circular badge */}
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "radial-gradient(circle at 40% 35%, #1B5E20, #004D40)",
+            border: "2px solid rgba(0,188,212,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            boxShadow: "0 0 8px rgba(0,188,212,0.3)",
+          }}
+        >
+          <span
+            style={{
+              color: "#FFD700",
+              fontSize: 8,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0,
+            }}
+          >
+            AUS
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== MAIN HUD =====
 export default function HUD() {
   const {
     runs,
@@ -418,7 +1188,7 @@ export default function HUD() {
     replayEvent,
     teamName,
     opponentName,
-    primaryColor,
+    primaryColor: _primaryColor2,
     secondaryColor,
     multiplayerEnabled,
     currentInnings,
@@ -435,7 +1205,7 @@ export default function HUD() {
     setLightingMode,
     onlineConnected,
     onlinePlayerRole,
-    onlineRoomCode,
+    onlineRoomCode: _onlineRoomCode,
     setOnlineConnected,
     bowlingLength,
     setBowlingLength,
@@ -447,9 +1217,11 @@ export default function HUD() {
     setShotType,
     difficulty,
     setDifficulty,
+    userMode,
+    setUserMode,
   } = useGameStore();
 
-  const { actor } = useActor();
+  const { actor: _actor } = useActor();
 
   const [eventKey, setEventKey] = useState(0);
   const [lastShot, setLastShot] = useState("");
@@ -463,6 +1235,7 @@ export default function HUD() {
   const [speedLocked, setSpeedLocked] = useState(false);
   const [difficultyOpen, setDifficultyOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [preDeliveryOverlay, setPreDeliveryOverlay] = useState(false);
 
   const prevRuns = useRef(runs);
   const prevWickets = useRef(wickets);
@@ -476,11 +1249,56 @@ export default function HUD() {
 
   const canBowl = ballState === "idle" && !inningsBreak && !gameOver;
   const canSwing = ballState === "bowled";
-  const oversDisplay = `${overs}.${balls}`;
-  const pc = primaryColor;
-  const sc = secondaryColor;
 
-  // Animate speed meter with rAF when bowling phase
+  // AI bowling when user is batting
+  useEffect(() => {
+    if (userMode === "batting" && canBowl) {
+      const t = setTimeout(
+        () => {
+          bowl();
+          setSpeedLocked(false);
+        },
+        1800 + Math.random() * 800,
+      );
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [userMode, canBowl, bowl]);
+
+  // AI batting when user is bowling
+  useEffect(() => {
+    if (userMode === "bowling" && ballState === "bowled") {
+      const aiDelay = 3000 + Math.random() * 600;
+      const t = setTimeout(() => {
+        const dirs = ["offside", "straight", "legside"] as const;
+        const dir = dirs[Math.floor(Math.random() * dirs.length)];
+        const meterVal = 0.3 + Math.random() * 0.5;
+        const quality = getTimingQuality(meterVal);
+        timingQualityRef.current = quality;
+        shotDirectionRef.current = dir;
+        useGameStore.getState().setShotDirection(dir);
+        if (quality !== "miss") {
+          swingRequestRef.current = true;
+          useGameStore.getState().swing();
+        }
+      }, aiDelay);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [userMode, ballState]);
+  // Pre-delivery "GET READY" overlay
+  useEffect(() => {
+    if (ballState === "bowled") {
+      setPreDeliveryOverlay(true);
+      const t = setTimeout(() => setPreDeliveryOverlay(false), 1800);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [ballState]);
+  const oversDisplay = `${overs}.${balls}`;
+  const _pc = "#00BCD4"; // Override with RC24 teal
+  const _sc = secondaryColor;
+
   useEffect(() => {
     if (canBowl && !speedLocked) {
       const animate = () => {
@@ -501,12 +1319,6 @@ export default function HUD() {
   }, [canBowl, speedLocked]);
 
   useEffect(() => {
-    if (ballState === "bowled" || ballState === "idle") {
-      setSpeedLocked(false);
-    }
-  }, [ballState]);
-
-  useEffect(() => {
     if (runs !== prevRuns.current || wickets !== prevWickets.current) {
       setEventKey((k) => k + 1);
       prevRuns.current = runs;
@@ -514,92 +1326,25 @@ export default function HUD() {
     }
   }, [runs, wickets]);
 
-  // Online sync polling
-  useEffect(() => {
-    if (!onlineConnected || !onlineRoomCode || !actor) return;
-
-    const interval = setInterval(async () => {
-      try {
-        if (onlinePlayerRole === "host") {
-          const state = useGameStore.getState();
-          await actor.updateRoomState(onlineRoomCode, {
-            inningsBreak: state.inningsBreak,
-            wickets1: BigInt(state.innings1Score.wickets),
-            wickets2: BigInt(state.innings2Score.wickets),
-            ballState: state.ballState,
-            balls1: BigInt(state.innings1Score.balls),
-            balls2: BigInt(state.innings2Score.balls),
-            overs1: BigInt(state.innings1Score.overs),
-            overs2: BigInt(state.innings2Score.overs),
-            currentInnings: BigInt(state.currentInnings),
-            gameOver: state.gameOver,
-            lastEvent: state.lastEvent,
-            runs1: BigInt(state.innings1Score.runs),
-            runs2: BigInt(state.innings2Score.runs),
-          });
-        } else if (onlinePlayerRole === "guest") {
-          const room = await actor.getRoom(onlineRoomCode);
-          if (room) {
-            const rs = room.state;
-            useGameStore.setState({
-              inningsBreak: rs.inningsBreak,
-              gameOver: rs.gameOver,
-              lastEvent: rs.lastEvent,
-              currentInnings: Number(rs.currentInnings) as 1 | 2,
-              innings1Score: {
-                runs: Number(rs.runs1),
-                wickets: Number(rs.wickets1),
-                overs: Number(rs.overs1),
-                balls: Number(rs.balls1),
-              },
-              innings2Score: {
-                runs: Number(rs.runs2),
-                wickets: Number(rs.wickets2),
-                overs: Number(rs.overs2),
-                balls: Number(rs.balls2),
-              },
-            });
-          }
-        }
-      } catch {
-        // silent retry
-      }
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, [onlineConnected, onlineRoomCode, onlinePlayerRole, actor]);
-
   const lockSpeed = () => {
-    if (speedLocked) return;
-    const v = getSpeedMeterValue();
-    const kph = speedToKph(v);
-    setBowlingSpeed(Math.round(((kph - 60) / 90) * 100));
-    setSpeedDisplay(kph);
+    if (speedRafRef.current !== null) cancelAnimationFrame(speedRafRef.current);
+    setBowlingSpeed(speedDisplay);
     setSpeedLocked(true);
     if (speedLockedTimerRef.current) clearTimeout(speedLockedTimerRef.current);
+    speedLockedTimerRef.current = setTimeout(() => setSpeedLocked(false), 8000);
   };
 
   const handleBowl = () => {
     if (!canBowl) return;
-    lockSpeed();
     bowl();
+    setSpeedLocked(false);
   };
 
   const triggerShot = (direction: "offside" | "straight" | "legside") => {
     if (!canSwing) return;
-    shotTypeRef.current = shotType as "push" | "stroke" | "loft";
-
-    // Leave = no shot played
-    if (footPosition === "leave") {
-      useGameStore.getState().addRuns(0, "Leave");
-      useGameStore.getState().resetBall();
-      return;
-    }
-
     const meterValue = getMeterValue();
     let quality = getTimingQuality(meterValue);
 
-    // Advance foot gives slightly better timing window
     if (footPosition === "advance" && quality === "early") quality = "good";
 
     timingQualityRef.current = quality;
@@ -612,7 +1357,6 @@ export default function HUD() {
     shotDirectionRef.current = direction;
     useGameStore.getState().setShotDirection(direction);
 
-    // Shot type affects naming
     const shotTypeNames: Record<string, Record<string, string>> = {
       push: { offside: "Push", straight: "Push Drive", legside: "Glance" },
       stroke: {
@@ -681,11 +1425,11 @@ export default function HUD() {
 
   const bowlBtnLabel = multiplayerEnabled
     ? currentInnings === 1
-      ? "Bowl (P1)"
-      : "Bowl (P2)"
-    : "Bowl!";
+      ? "BOWL"
+      : "BOWL"
+    : "BOWL";
 
-  const matchLabel = multiplayerEnabled
+  const _matchLabel = multiplayerEnabled
     ? `INNINGS ${currentInnings} · P${currentBattingPlayer} BATS`
     : "T20 MATCH";
 
@@ -702,13 +1446,10 @@ export default function HUD() {
 
   const speedFill = ((speedDisplay - 60) / 90) * 100;
   const speedColor =
-    speedFill > 80 ? "#f87171" : speedFill > 55 ? "#fbbf24" : "#4ade80";
+    speedFill > 80 ? "#EF5350" : speedFill > 55 ? "#fbbf24" : "#66BB6A";
 
-  // Batting card stats
-  const batsman1 = { name: INDIA_SQUAD[0].name };
-  const batsman2 = { name: INDIA_SQUAD[1].name };
   const totalBalls = balls + overs * 6;
-  const strikeRate =
+  const _strikeRate =
     totalBalls > 0 ? ((runs / totalBalls) * 100).toFixed(0) : "0";
   const ausBowlers = AUS_SQUAD.filter(
     (p) => p.role === "bowl" || p.role === "all",
@@ -716,312 +1457,347 @@ export default function HUD() {
   const bowler = {
     name: ausBowlers[overs % ausBowlers.length]?.name ?? "P. Cummins",
   };
-  const economy = overs > 0 ? (runs / overs).toFixed(1) : "0.0";
+  const _economy = overs > 0 ? (runs / overs).toFixed(1) : "0.0";
+
+  // RC24 style constants
+  const RC_DARK = "rgba(10,21,32,0.92)";
+  const RC_TEAL = "#00BCD4";
+  const RC_BTN_BG = "rgba(15,30,30,0.85)";
+  const RC_BTN_BORDER = "rgba(0,188,212,0.6)";
 
   return (
-    <div
-      style={{ pointerEvents: "none" }}
-      className="fixed inset-0 flex flex-col justify-between"
-    >
-      {/* ===== TOP ROW ===== */}
-      <div className="flex items-start justify-between px-3 pt-3 gap-2">
-        {/* TOP-LEFT: Fielding Radar */}
-        <div
-          className="rounded-xl p-2"
-          style={{
-            background: "rgba(4,12,28,0.60)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            backdropFilter: "blur(6px)",
-            pointerEvents: "none",
-            minWidth: 90,
-          }}
-        >
-          <FieldRadar primaryColor={pc} />
-        </div>
+    <div style={{ pointerEvents: "none" }} className="fixed inset-0">
+      {/* ===== TOP-LEFT: Field Radar ===== */}
+      <div
+        className="absolute top-3 left-3"
+        style={{
+          background: RC_DARK,
+          border: `1px solid ${RC_BTN_BORDER}`,
+          backdropFilter: "blur(8px)",
+          borderRadius: 12,
+          padding: 8,
+          pointerEvents: "none",
+        }}
+      >
+        <FieldRadar primaryColor={RC_TEAL} />
+      </div>
 
-        {/* TOP-CENTER: Broadcast Scoreboard */}
-        <div
-          className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl"
+      {/* ===== TOP-RIGHT: Utility Buttons ===== */}
+      <div
+        className="absolute top-3 right-3 flex items-center gap-1.5"
+        style={{ pointerEvents: "auto" }}
+      >
+        {onlineConnected && (
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded-md"
+            style={{
+              background: "rgba(0,200,80,0.15)",
+              border: "1px solid rgba(0,200,80,0.35)",
+            }}
+            data-ocid="game.panel"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-green-400 text-xs font-bold uppercase tracking-wider">
+              {onlinePlayerRole === "host" ? "HOST" : "GUEST"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setOnlineConnected(false)}
+              className="text-white/30 hover:text-white/60 text-xs ml-1"
+              style={{ cursor: "pointer", background: "none", border: "none" }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          data-ocid="game.toggle"
+          onClick={() =>
+            setLightingMode(lightingMode === "day" ? "night" : "day")
+          }
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all hover:scale-110"
           style={{
-            background: "rgba(4,12,28,0.60)",
-            border: `1px solid ${pc}44`,
-            backdropFilter: "blur(8px)",
-            boxShadow: `0 4px 24px rgba(0,0,0,0.5), 0 0 16px ${pc}1a`,
-            minWidth: 160,
+            background:
+              lightingMode === "night"
+                ? "rgba(30,10,80,0.7)"
+                : "rgba(255,200,50,0.15)",
+            border: `1px solid ${lightingMode === "night" ? "rgba(120,80,255,0.5)" : "rgba(255,200,50,0.45)"}`,
+            color: lightingMode === "night" ? "#a78bfa" : "#fbbf24",
+            cursor: "pointer",
           }}
         >
-          {/* Team vs Team */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-5 w-0.5 flex-col overflow-hidden rounded-full">
-              <div className="flex-1" style={{ background: "#FF9933" }} />
-              <div className="flex-1 bg-white" />
-              <div className="flex-1" style={{ background: sc }} />
-            </div>
-            <span
-              className="font-display text-xs font-bold tracking-widest uppercase"
-              style={{ color: "rgba(255,255,255,0.5)" }}
-            >
-              {teamName}
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10 }}>
-              vs
-            </span>
-            <span
-              className="font-display text-xs font-bold tracking-widest uppercase"
-              style={{ color: "rgba(255,255,255,0.5)" }}
-            >
-              {opponentName}
-            </span>
-          </div>
-          {/* Score */}
-          <div className="flex items-baseline gap-1">
-            <span
-              className="font-display font-extrabold leading-none"
-              style={{ color: "#fff", fontSize: 16 }}
-            >
-              {runs}
-            </span>
-            <span
-              className="font-display font-bold"
-              style={{ color: `${pc}cc`, fontSize: 16 }}
-            >
-              /{wickets}
-            </span>
-          </div>
-          {/* Overs + match label */}
-          <div className="flex items-center gap-2">
-            <span
-              className="font-body text-xs"
-              style={{ color: "rgba(255,255,255,0.45)" }}
-            >
-              ({oversDisplay} ov)
-            </span>
-            {multiplayerEnabled && (
-              <span
-                className="font-body text-xs uppercase tracking-widest px-1.5 py-0.5 rounded"
-                style={{
-                  background: `${pc}22`,
-                  color: `${pc}cc`,
-                  fontSize: 9,
-                  border: `1px solid ${pc}44`,
-                }}
-              >
-                {matchLabel}
-              </span>
-            )}
-          </div>
-          {/* Event flash */}
-          <AnimatePresence mode="popLayout">
-            {lastEvent && (
-              <motion.div
-                key={eventKey}
-                initial={{ opacity: 0, y: -8, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                transition={{ duration: 0.25 }}
-                className="font-display text-sm font-extrabold tracking-wide"
-                style={{ color: pc }}
-                data-ocid="game.toast"
-              >
-                {lastEvent}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* TOP-RIGHT: Control buttons */}
-        <div
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
+          {lightingMode === "day" ? <Sun size={13} /> : <Moon size={13} />}
+        </button>
+        <button
+          type="button"
+          data-ocid="team_editor.open_modal_button"
+          onClick={() => setTeamEditorOpen(true)}
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all hover:scale-110"
           style={{
-            background: "rgba(4,12,28,0.60)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            backdropFilter: "blur(6px)",
-            pointerEvents: "auto",
+            background: `${RC_TEAL}22`,
+            border: `1px solid ${RC_BTN_BORDER}`,
+            color: RC_TEAL,
+            cursor: "pointer",
           }}
         >
-          {onlineConnected && (
-            <div
-              className="flex items-center gap-1 px-2 py-1 rounded-md mr-1"
-              style={{
-                background: "rgba(0,200,80,0.15)",
-                border: "1px solid rgba(0,200,80,0.35)",
-              }}
-              data-ocid="game.panel"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="font-body text-xs text-green-400 uppercase tracking-wider">
-                {onlinePlayerRole === "host" ? "HOST" : "GUEST"}
-              </span>
-              <button
-                type="button"
-                onClick={() => setOnlineConnected(false)}
-                className="text-white/30 hover:text-white/60 transition-colors text-xs ml-1"
-                style={{ cursor: "pointer" }}
-                title="Disconnect"
-              >
-                ✕
-              </button>
-            </div>
-          )}
+          <Settings size={14} />
+        </button>
+        <button
+          type="button"
+          data-ocid="game.open_modal_button"
+          onClick={() => setOnlineLobbyOpen(true)}
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all hover:scale-110"
+          style={{
+            background: onlineConnected ? "rgba(0,200,80,0.15)" : RC_BTN_BG,
+            border: `1px solid ${onlineConnected ? "rgba(0,200,80,0.4)" : RC_BTN_BORDER}`,
+            color: onlineConnected ? "#4ade80" : "rgba(255,255,255,0.5)",
+            cursor: "pointer",
+          }}
+        >
+          <Wifi size={13} />
+        </button>
+        {/* DIFF */}
+        <div className="relative">
           <button
             type="button"
             data-ocid="game.toggle"
-            onClick={() =>
-              setLightingMode(lightingMode === "day" ? "night" : "day")
-            }
-            className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
+            onClick={() => setDifficultyOpen((v) => !v)}
+            className="flex items-center justify-center h-7 px-2 rounded-lg transition-all hover:scale-110"
             style={{
-              background:
-                lightingMode === "night"
-                  ? "rgba(30,10,80,0.7)"
-                  : "rgba(255,200,50,0.15)",
-              border: `1px solid ${
-                lightingMode === "night"
-                  ? "rgba(120,80,255,0.5)"
-                  : "rgba(255,200,50,0.45)"
-              }`,
-              color: lightingMode === "night" ? "#a78bfa" : "#fbbf24",
-              cursor: "pointer",
-            }}
-            title={lightingMode === "day" ? "Switch to Night" : "Switch to Day"}
-          >
-            {lightingMode === "day" ? <Sun size={13} /> : <Moon size={13} />}
-          </button>
-          <button
-            type="button"
-            data-ocid="team_editor.open_modal_button"
-            onClick={() => setTeamEditorOpen(true)}
-            className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
-            style={{
-              background: `${pc}22`,
-              border: `1px solid ${pc}44`,
-              color: pc,
-              cursor: "pointer",
-            }}
-          >
-            <Settings size={14} />
-          </button>
-          <button
-            type="button"
-            data-ocid="game.open_modal_button"
-            onClick={() => setOnlineLobbyOpen(true)}
-            className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
-            style={{
-              background: onlineConnected
-                ? "rgba(0,200,80,0.15)"
-                : "rgba(255,255,255,0.07)",
-              border: `1px solid ${
-                onlineConnected
-                  ? "rgba(0,200,80,0.4)"
-                  : "rgba(255,255,255,0.15)"
-              }`,
-              color: onlineConnected ? "#4ade80" : "rgba(255,255,255,0.5)",
-              cursor: "pointer",
-            }}
-            title="Online Play"
-          >
-            <Wifi size={13} />
-          </button>
-          {/* DIFF button */}
-          <div className="relative">
-            <button
-              type="button"
-              data-ocid="game.toggle"
-              onClick={() => setDifficultyOpen((v) => !v)}
-              className="flex items-center justify-center h-7 px-2 rounded-lg transition-all duration-150 hover:scale-110"
-              style={{
-                background: difficultyOpen
-                  ? `${pc}33`
-                  : "rgba(255,255,255,0.07)",
-                border: `1px solid ${difficultyOpen ? `${pc}66` : "rgba(255,255,255,0.15)"}`,
-                color: "rgba(255,255,255,0.7)",
-                cursor: "pointer",
-                fontSize: 9,
-                fontWeight: 700,
-              }}
-              title="Difficulty"
-            >
-              DIFF
-            </button>
-            {difficultyOpen && (
-              <div
-                className="absolute right-0 top-9 flex flex-col gap-1 p-2 rounded-xl"
-                style={{
-                  background: "rgba(4,12,28,0.97)",
-                  border: `1px solid ${pc}44`,
-                  backdropFilter: "blur(8px)",
-                  zIndex: 60,
-                  minWidth: 90,
-                }}
-              >
-                {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    data-ocid="game.toggle"
-                    onClick={() => {
-                      setDifficulty(d);
-                      setDifficultyOpen(false);
-                    }}
-                    className="px-3 py-1 rounded-lg text-xs font-bold uppercase transition-all"
-                    style={{
-                      background: difficulty === d ? `${pc}33` : "transparent",
-                      color: difficulty === d ? pc : "rgba(255,255,255,0.55)",
-                      border: `1px solid ${difficulty === d ? `${pc}66` : "transparent"}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {d === "easy"
-                      ? "🟢 Easy"
-                      : d === "medium"
-                        ? "🟡 Medium"
-                        : "🔴 Hard"}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* STATS button */}
-          <button
-            type="button"
-            data-ocid="game.open_modal_button"
-            onClick={() => setStatsOpen(true)}
-            className="flex items-center justify-center h-7 px-2 rounded-lg transition-all duration-150 hover:scale-110"
-            style={{
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.15)",
+              background: difficultyOpen ? `${RC_TEAL}33` : RC_BTN_BG,
+              border: `1px solid ${RC_BTN_BORDER}`,
               color: "rgba(255,255,255,0.7)",
               cursor: "pointer",
               fontSize: 9,
               fontWeight: 700,
             }}
-            title="Match Stats"
           >
-            STATS
+            DIFF
           </button>
+          {difficultyOpen && (
+            <div
+              className="absolute right-0 top-9 flex flex-col gap-1 p-2 rounded-xl"
+              style={{
+                background: "rgba(4,12,28,0.97)",
+                border: `1px solid ${RC_BTN_BORDER}`,
+                backdropFilter: "blur(8px)",
+                zIndex: 60,
+                minWidth: 90,
+              }}
+            >
+              {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  data-ocid="game.toggle"
+                  onClick={() => {
+                    setDifficulty(d);
+                    setDifficultyOpen(false);
+                  }}
+                  className="px-3 py-1 rounded-lg text-xs font-bold uppercase transition-all"
+                  style={{
+                    background:
+                      difficulty === d ? `${RC_TEAL}33` : "transparent",
+                    color:
+                      difficulty === d ? RC_TEAL : "rgba(255,255,255,0.55)",
+                    border: `1px solid ${difficulty === d ? RC_BTN_BORDER : "transparent"}`,
+                    cursor: "pointer",
+                  }}
+                >
+                  {d === "easy"
+                    ? "🟢 Easy"
+                    : d === "medium"
+                      ? "🟡 Medium"
+                      : "🔴 Hard"}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+        {/* STATS */}
+        <button
+          type="button"
+          data-ocid="game.open_modal_button"
+          onClick={() => setStatsOpen(true)}
+          className="flex items-center justify-center h-7 px-2 rounded-lg transition-all hover:scale-110"
+          style={{
+            background: RC_BTN_BG,
+            border: `1px solid ${RC_BTN_BORDER}`,
+            color: "rgba(255,255,255,0.7)",
+            cursor: "pointer",
+            fontSize: 9,
+            fontWeight: 700,
+          }}
+        >
+          STATS
+        </button>
+        {/* BAT / BOWL MODE TOGGLE */}
+        <button
+          type="button"
+          data-ocid="game.toggle"
+          onClick={() =>
+            setUserMode(userMode === "batting" ? "bowling" : "batting")
+          }
+          className="flex items-center justify-center h-7 px-2 rounded-lg transition-all hover:scale-110"
+          style={{
+            background:
+              userMode === "batting" ? "rgba(245,124,0,0.25)" : `${RC_TEAL}33`,
+            border: `1px solid ${userMode === "batting" ? "#F57C00" : RC_TEAL}`,
+            color: userMode === "batting" ? "#F57C00" : RC_TEAL,
+            cursor: "pointer",
+            fontSize: 9,
+            fontWeight: 900,
+            letterSpacing: "0.05em",
+          }}
+        >
+          {userMode === "batting" ? "🏏 BAT" : "⚡ BOWL"}
+        </button>
+        {/* LOCAL MATCH */}
+        <button
+          type="button"
+          data-ocid="game.toggle"
+          onClick={() => setMpPanelOpen(!mpPanelOpen)}
+          className="flex items-center justify-center h-7 px-2 rounded-lg transition-all hover:scale-110"
+          style={{
+            background: mpPanelOpen ? `${RC_TEAL}33` : RC_BTN_BG,
+            border: `1px solid ${RC_BTN_BORDER}`,
+            color: mpPanelOpen ? RC_TEAL : "rgba(255,255,255,0.6)",
+            cursor: "pointer",
+            fontSize: 9,
+            fontWeight: 700,
+          }}
+        >
+          <Users size={11} className="mr-1" />
+          2P
+        </button>
+        {mpPanelOpen && (
+          <div
+            className="absolute right-0 top-9 flex flex-col gap-2 p-3 rounded-xl"
+            style={{
+              background: "rgba(4,12,28,0.97)",
+              border: `1px solid ${RC_BTN_BORDER}`,
+              backdropFilter: "blur(8px)",
+              zIndex: 60,
+              minWidth: 160,
+            }}
+          >
+            {!multiplayerEnabled ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <span
+                    style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}
+                  >
+                    Overs:
+                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={mpOvers}
+                    onChange={(e) => setMpOvers(Number(e.target.value))}
+                    className="text-xs font-bold w-12 px-2 py-1 rounded text-center"
+                    style={{
+                      background: "rgba(0,0,0,0.4)",
+                      border: `1px solid ${RC_BTN_BORDER}`,
+                      color: "#fff",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  data-ocid="game.primary_button"
+                  onClick={() => {
+                    startMultiplayer(mpOvers);
+                    setMpPanelOpen(false);
+                  }}
+                  className="font-bold uppercase tracking-wider px-3 py-2 rounded-lg text-xs transition-all hover:scale-105"
+                  style={{
+                    background: RC_TEAL,
+                    color: "#0B2E4E",
+                    cursor: "pointer",
+                  }}
+                >
+                  Start Match
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                data-ocid="game.toggle"
+                onClick={() => {
+                  resetMultiplayer();
+                  setMpPanelOpen(false);
+                }}
+                className="text-xs uppercase tracking-wider px-3 py-1.5 rounded-lg"
+                style={{
+                  background: "rgba(255,60,60,0.12)",
+                  color: "rgba(255,120,120,0.8)",
+                  border: "1px solid rgba(255,60,60,0.3)",
+                  cursor: "pointer",
+                }}
+              >
+                Exit Match
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Umpire Signal Overlay */}
+      {/* ===== GET READY PRE-DELIVERY OVERLAY ===== */}
+      <AnimatePresence>
+        {preDeliveryOverlay && (
+          <motion.div
+            key="pre-delivery"
+            initial={{ opacity: 0, scale: 0.7, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 1.05, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ zIndex: 54, top: "35%" }}
+          >
+            <div
+              style={{
+                color: "#00e5ff",
+                fontSize: 42,
+                fontWeight: 900,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                textShadow:
+                  "0 0 20px rgba(0,229,255,0.8), 0 0 50px rgba(0,229,255,0.5)",
+                background: "rgba(0,10,30,0.72)",
+                border: "2px solid rgba(0,229,255,0.4)",
+                borderRadius: 16,
+                padding: "10px 32px",
+              }}
+            >
+              🏏 GET READY!
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== UMPIRE SIGNAL OVERLAY ===== */}
       <AnimatePresence>
         {umpireSignal !== "none" && UMPIRE_SIGNAL_STYLES[umpireSignal] && (
           <motion.div
             key={umpireSignal}
-            initial={{ opacity: 0, scale: 0.6, y: -30 }}
+            initial={{ opacity: 0, scale: 0.5, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -20 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="absolute top-28 left-1/2 -translate-x-1/2 pointer-events-none"
+            exit={{ opacity: 0, scale: 1.1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
             style={{ zIndex: 55 }}
           >
             <div
-              className="font-display text-5xl font-extrabold tracking-[0.2em] uppercase px-8 py-4 rounded-2xl"
+              className="text-7xl font-black tracking-[0.25em] uppercase px-10 py-5 rounded-3xl"
               style={{
                 color: UMPIRE_SIGNAL_STYLES[umpireSignal].color,
-                textShadow: `0 0 32px ${UMPIRE_SIGNAL_STYLES[umpireSignal].glow}, 0 0 64px ${UMPIRE_SIGNAL_STYLES[umpireSignal].glow}`,
-                background: "rgba(5,10,25,0.72)",
-                border: `2px solid ${UMPIRE_SIGNAL_STYLES[umpireSignal].color}55`,
-                boxShadow: `0 0 40px ${UMPIRE_SIGNAL_STYLES[umpireSignal].glow}`,
+                textShadow: `0 0 24px ${UMPIRE_SIGNAL_STYLES[umpireSignal].glow}, 0 0 60px ${UMPIRE_SIGNAL_STYLES[umpireSignal].glow}, 0 0 100px ${UMPIRE_SIGNAL_STYLES[umpireSignal].glow}`,
+                background: "rgba(0,0,0,0.75)",
+                border: `3px solid ${UMPIRE_SIGNAL_STYLES[umpireSignal].color}88`,
+                boxShadow: `0 0 60px ${UMPIRE_SIGNAL_STYLES[umpireSignal].glow}, inset 0 0 40px rgba(0,0,0,0.5)`,
               }}
               data-ocid="game.toast"
             >
@@ -1031,7 +1807,7 @@ export default function HUD() {
         )}
       </AnimatePresence>
 
-      {/* Shot name flash */}
+      {/* ===== SHOT NAME FLASH ===== */}
       <AnimatePresence>
         {lastShot && (
           <motion.div
@@ -1043,12 +1819,12 @@ export default function HUD() {
             style={{ zIndex: 40 }}
           >
             <div
-              className="font-display px-6 py-3 text-xl font-bold tracking-widest uppercase rounded-lg"
+              className="px-6 py-3 text-xl font-bold tracking-widest uppercase rounded-lg"
               style={{
-                background: "rgba(11,46,78,0.85)",
-                border: `2px solid ${pc}b3`,
+                background: "rgba(10,21,32,0.9)",
+                border: `2px solid ${RC_BTN_BORDER}`,
                 color: "#fff",
-                textShadow: `0 0 16px ${pc}e6`,
+                textShadow: `0 0 16px ${RC_TEAL}`,
               }}
             >
               {lastShot}
@@ -1057,7 +1833,7 @@ export default function HUD() {
         )}
       </AnimatePresence>
 
-      {/* Timing Quality Flash */}
+      {/* ===== TIMING QUALITY FLASH ===== */}
       <AnimatePresence>
         {timingFlash && (
           <motion.div
@@ -1068,18 +1844,18 @@ export default function HUD() {
             transition={{ duration: 0.28, ease: "easeOut" }}
             className="absolute pointer-events-none"
             style={{
-              top: "40%",
+              top: "38%",
               left: "50%",
               transform: "translateX(-50%) translateY(-50%)",
               zIndex: 45,
             }}
           >
             <div
-              className="font-display text-3xl font-extrabold tracking-widest uppercase px-8 py-4 rounded-2xl"
+              className="text-3xl font-extrabold tracking-widest uppercase px-8 py-4 rounded-2xl"
               style={{
                 color: TIMING_QUALITY_STYLES[timingFlash].color,
                 textShadow: `0 0 24px ${TIMING_QUALITY_STYLES[timingFlash].glow}`,
-                background: "rgba(5,10,25,0.85)",
+                background: "rgba(5,10,25,0.9)",
                 border: `2px solid ${TIMING_QUALITY_STYLES[timingFlash].color}66`,
                 boxShadow: `0 0 40px ${TIMING_QUALITY_STYLES[timingFlash].glow}`,
               }}
@@ -1091,124 +1867,469 @@ export default function HUD() {
         )}
       </AnimatePresence>
 
-      {/* Horizontal Timing Meter (WCC3-style) */}
+      {/* ===== BATTING PHASE: Right-side controls ===== */}
       <AnimatePresence>
-        {canSwing && (
+        {canSwing && userMode === "batting" && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.25 }}
-            className="absolute pointer-events-none flex justify-center"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+            className="absolute"
             style={{
-              bottom: 220,
-              left: 0,
-              right: 0,
-              zIndex: 35,
+              right: 48,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 30,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 8,
+              pointerEvents: "auto",
             }}
           >
+            {/* RC24 Timing Meter */}
             <div
-              className="px-4 py-2 rounded-xl"
               style={{
-                background: "rgba(4,12,28,0.8)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                backdropFilter: "blur(4px)",
+                background: RC_DARK,
+                border: `1px solid ${RC_BTN_BORDER}`,
+                backdropFilter: "blur(6px)",
+                borderRadius: 8,
+                padding: "8px 12px",
               }}
             >
-              <HorizontalTimingMeter />
+              <div
+                style={{
+                  color: "rgba(255,255,255,0.4)",
+                  fontSize: 8,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  marginBottom: 4,
+                  textAlign: "center",
+                }}
+              >
+                TIMING
+              </div>
+              <RC24TimingMeter />
+            </div>
+
+            {/* Ball Type Indicator */}
+            <BallTypeIndicator variant={bowlingVariant} />
+
+            {/* SHOT TYPE BUTTONS: PUSH | STROKE | LOFT */}
+            <div style={{ display: "flex", gap: 4 }}>
+              {(["push", "stroke", "loft"] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  data-ocid="game.toggle"
+                  onClick={() => {
+                    setShotType(st);
+                    shotTypeRef.current = st;
+                  }}
+                  style={{
+                    background: shotType === st ? `${RC_TEAL}25` : RC_BTN_BG,
+                    border: `1.5px solid ${shotType === st ? RC_TEAL : RC_BTN_BORDER}`,
+                    color: shotType === st ? RC_TEAL : "#ffffff",
+                    borderRadius: 6,
+                    padding: "6px 10px",
+                    fontSize: 10,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    cursor: "pointer",
+                    minWidth: 52,
+                    boxShadow:
+                      shotType === st ? `0 0 8px ${RC_TEAL}44` : "none",
+                    transition: "all 0.1s",
+                  }}
+                >
+                  {st.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {/* FOOT POSITION BUTTONS */}
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {/* BACK FOOT circular */}
+              {(["back", "front", "advance", "leave"] as const).map((fp) => {
+                const labels: Record<string, string> = {
+                  back: "BACK\nFOOT",
+                  front: "FRONT\nFOOT",
+                  advance: "ADVANCE",
+                  leave: "LEAVE",
+                };
+                const icons: Record<string, string> = {
+                  back: "↩",
+                  front: "↪",
+                  advance: "⏩",
+                  leave: "⛔",
+                };
+                const isCircular = fp === "back" || fp === "front";
+                return (
+                  <button
+                    key={fp}
+                    type="button"
+                    data-ocid="game.toggle"
+                    onClick={() => setFootPosition(fp)}
+                    style={{
+                      background:
+                        footPosition === fp ? `${RC_TEAL}25` : RC_BTN_BG,
+                      border: `1.5px solid ${footPosition === fp ? RC_TEAL : RC_BTN_BORDER}`,
+                      color:
+                        footPosition === fp ? RC_TEAL : "rgba(255,255,255,0.8)",
+                      borderRadius: isCircular ? "50%" : 20,
+                      width: isCircular ? 46 : undefined,
+                      height: isCircular ? 46 : undefined,
+                      padding: isCircular ? 0 : "4px 10px",
+                      fontSize: isCircular ? 18 : 9,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow:
+                        footPosition === fp ? `0 0 10px ${RC_TEAL}44` : "none",
+                      transition: "all 0.1s",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {isCircular ? (
+                      <>
+                        <span style={{ fontSize: 14 }}>{icons[fp]}</span>
+                        <span
+                          style={{
+                            fontSize: 7,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            lineHeight: 1,
+                            marginTop: 1,
+                          }}
+                        >
+                          {fp === "back" ? "BACK" : "FRNT"}
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ textTransform: "uppercase" }}>
+                        {labels[fp]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Batting phase shot zones - transparent overlay */}
+      {/* ===== BATTING PHASE: Vertical speed meter (far right) ===== */}
       <AnimatePresence>
-        {canSwing && (
+        {canSwing && userMode === "batting" && (
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute"
+            style={{
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 30,
+              background: RC_DARK,
+              border: `1px solid ${RC_BTN_BORDER}`,
+              backdropFilter: "blur(6px)",
+              borderRadius: 8,
+              padding: 8,
+              pointerEvents: "auto",
+            }}
+          >
+            <VerticalSpeedMeter
+              speedFill={speedFill}
+              speedDisplay={speedDisplay}
+              speedColor={speedColor}
+              onLock={lockSpeed}
+              locked={speedLocked}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== BATTING PHASE: D-pad joystick (bottom-left) ===== */}
+      <AnimatePresence>
+        {canSwing && userMode === "batting" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="absolute"
+            style={{
+              left: 12,
+              bottom: 64,
+              zIndex: 30,
+              background: RC_DARK,
+              border: `1px solid ${RC_BTN_BORDER}`,
+              backdropFilter: "blur(6px)",
+              borderRadius: "50%",
+              padding: 4,
+              pointerEvents: "auto",
+            }}
+          >
+            <DPadJoystick onShot={triggerShot} enabled={canSwing} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== BATTING PHASE: Swipe zone (transparent overlay) ===== */}
+      <AnimatePresence>
+        {canSwing && userMode === "batting" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="absolute inset-0"
-            style={{ pointerEvents: "auto", zIndex: 20 }}
+            style={{ pointerEvents: "auto", zIndex: 15 }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ===== BOWLING PHASE: Right-side controls ===== */}
+      <AnimatePresence>
+        {canBowl && userMode === "bowling" && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+            className="absolute"
+            style={{
+              right: 48,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 30,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 8,
+              pointerEvents: "auto",
+            }}
+            data-ocid="game.panel"
           >
-            <div className="flex h-full w-full">
-              <button
-                type="button"
-                data-ocid="game.secondary_button"
-                className="flex flex-col items-center justify-end pb-80 transition-all duration-150"
+            {/* Bowler type: PACER / SPINNER */}
+            <div
+              style={{
+                background: RC_DARK,
+                border: `1px solid ${RC_BTN_BORDER}`,
+                backdropFilter: "blur(6px)",
+                borderRadius: 8,
+                padding: "8px 10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <div
                 style={{
-                  width: "35%",
-                  background: "rgba(30,80,200,0.06)",
-                  border: "none",
-                  borderRight: "1px solid rgba(30,80,200,0.15)",
-                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.35)",
+                  fontSize: 8,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
                 }}
-                onClick={() => triggerShot("legside")}
               >
-                <div className="flex flex-col items-center gap-1 opacity-40">
-                  <span className="text-xl">↙</span>
-                  <span
-                    className="font-display text-xs font-bold tracking-widest uppercase"
-                    style={{ color: "rgba(100,160,255,0.85)" }}
+                BOWLER TYPE
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {(["pacer", "spinner"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    data-ocid="game.toggle"
+                    onClick={() => handleBowlingTypeSelect(t)}
+                    style={{
+                      background:
+                        bowlingType === t ? `${RC_TEAL}25` : RC_BTN_BG,
+                      border: `1.5px solid ${bowlingType === t ? RC_TEAL : RC_BTN_BORDER}`,
+                      color: bowlingType === t ? RC_TEAL : "#ffffff",
+                      borderRadius: 6,
+                      padding: "5px 12px",
+                      fontSize: 9,
+                      fontWeight: 800,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      cursor: "pointer",
+                      boxShadow:
+                        bowlingType === t ? `0 0 8px ${RC_TEAL}44` : "none",
+                    }}
                   >
-                    Leg Side
-                  </span>
-                </div>
-              </button>
-              <button
-                type="button"
-                data-ocid="game.primary_button"
-                className="flex flex-col items-center justify-end pb-80 transition-all duration-150"
+                    {t === "pacer" ? "⚡ PACE" : "🌀 SPIN"}
+                  </button>
+                ))}
+              </div>
+              {/* Variants */}
+              <div
                 style={{
-                  width: "30%",
-                  background: "rgba(255,255,255,0.02)",
-                  border: "none",
-                  cursor: "pointer",
+                  display: "flex",
+                  gap: 4,
+                  flexWrap: "wrap",
+                  justifyContent: "flex-end",
                 }}
-                onClick={() => triggerShot("straight")}
               >
-                <div className="flex flex-col items-center gap-1 opacity-40">
-                  <span className="text-xl">↑</span>
-                  <span
-                    className="font-display text-xs font-bold tracking-widest uppercase"
-                    style={{ color: "rgba(255,255,255,0.85)" }}
+                {currentVariants.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    data-ocid="game.toggle"
+                    onClick={() => handleVariantSelect(v.id)}
+                    style={{
+                      background:
+                        bowlingVariant === v.id
+                          ? `${RC_TEAL}22`
+                          : "rgba(0,0,0,0.4)",
+                      border: `1px solid ${bowlingVariant === v.id ? RC_TEAL : "rgba(255,255,255,0.2)"}`,
+                      color:
+                        bowlingVariant === v.id
+                          ? RC_TEAL
+                          : "rgba(255,255,255,0.7)",
+                      borderRadius: 5,
+                      padding: "3px 8px",
+                      fontSize: 8,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                    }}
                   >
-                    Straight
-                  </span>
-                </div>
-              </button>
-              <button
-                type="button"
-                data-ocid="game.toggle"
-                className="flex flex-col items-center justify-end pb-80 transition-all duration-150"
-                style={{
-                  width: "35%",
-                  background: `${pc}08`,
-                  border: "none",
-                  borderLeft: `1px solid ${pc}20`,
-                  cursor: "pointer",
-                }}
-                onClick={() => triggerShot("offside")}
-              >
-                <div className="flex flex-col items-center gap-1 opacity-40">
-                  <span className="text-xl">↘</span>
-                  <span
-                    className="font-display text-xs font-bold tracking-widest uppercase"
-                    style={{ color: `${pc}cc` }}
+                    {v.id === "swing_in"
+                      ? "IN"
+                      : v.id === "swing_out"
+                        ? "OUT"
+                        : v.id === "yorker"
+                          ? "YK"
+                          : v.id === "bouncer"
+                            ? "BC"
+                            : v.id === "offspin"
+                              ? "OS"
+                              : "LS"}
+                  </button>
+                ))}
+              </div>
+              {/* Length selector */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span
+                  style={{
+                    color: "rgba(255,255,255,0.3)",
+                    fontSize: 8,
+                    textTransform: "uppercase",
+                    fontWeight: 700,
+                  }}
+                >
+                  LEN:
+                </span>
+                {(["full", "good", "short"] as const).map((len) => (
+                  <button
+                    key={len}
+                    type="button"
+                    data-ocid="game.toggle"
+                    onClick={() => setBowlingLength(len)}
+                    style={{
+                      background:
+                        bowlingLength === len
+                          ? "rgba(0,188,212,0.25)"
+                          : "rgba(0,0,0,0.5)",
+                      color:
+                        bowlingLength === len
+                          ? RC_TEAL
+                          : "rgba(255,255,255,0.6)",
+                      border: `1px solid ${bowlingLength === len ? RC_BTN_BORDER : "rgba(255,255,255,0.2)"}`,
+                      borderRadius: 4,
+                      width: 30,
+                      height: 26,
+                      fontSize: 8,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                    }}
                   >
-                    Off Side
-                  </span>
-                </div>
-              </button>
+                    {len === "full" ? "FL" : len === "good" ? "GD" : "SH"}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* BOWL button */}
+            <button
+              type="button"
+              onClick={handleBowl}
+              disabled={!canBowl}
+              data-ocid="game.primary_button"
+              style={{
+                background: `linear-gradient(135deg, ${RC_TEAL}, #006080)`,
+                color: "#ffffff",
+                cursor: "pointer",
+                border: `2px solid ${RC_TEAL}`,
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                fontSize: 11,
+                fontWeight: 900,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                boxShadow: `0 0 20px ${RC_TEAL}66, 0 0 40px ${RC_TEAL}22`,
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                transition: "all 0.15s",
+                alignSelf: "flex-end",
+              }}
+            >
+              {bowlBtnLabel}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Replay Overlay */}
+      {/* ===== BOWLING PHASE: Vertical speed meter (far right) ===== */}
+      <AnimatePresence>
+        {canBowl && userMode === "bowling" && (
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute"
+            style={{
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 30,
+              background: RC_DARK,
+              border: `1px solid ${RC_BTN_BORDER}`,
+              backdropFilter: "blur(6px)",
+              borderRadius: 8,
+              padding: 8,
+              pointerEvents: "auto",
+            }}
+          >
+            <VerticalSpeedMeter
+              speedFill={speedFill}
+              speedDisplay={speedDisplay}
+              speedColor={speedColor}
+              onLock={lockSpeed}
+              locked={speedLocked}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== REPLAY OVERLAY ===== */}
       <AnimatePresence>
         {replayActive && (
           <motion.div
@@ -1216,56 +2337,57 @@ export default function HUD() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-            style={{ background: "rgba(5,15,30,0.72)", zIndex: 50 }}
-            data-ocid="game.modal"
+            className="absolute inset-0 pointer-events-none"
+            style={{ zIndex: 50 }}
           >
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="flex flex-col items-center gap-3"
+            <div
+              className="absolute top-24 left-1/2 -translate-x-1/2"
+              style={{
+                background: "rgba(5,10,25,0.75)",
+                border: `2px solid ${RC_BTN_BORDER}`,
+                borderRadius: 8,
+                padding: "6px 20px",
+              }}
             >
-              <motion.div
-                animate={{ opacity: [1, 0.4, 1] }}
-                transition={{
-                  duration: 1.2,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "easeInOut",
+              <span
+                style={{
+                  color: RC_TEAL,
+                  fontSize: 18,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.3em",
+                  textShadow: `0 0 16px ${RC_TEAL}`,
+                }}
+              >
+                ◉ REPLAY
+              </span>
+            </div>
+            {replayEvent && (
+              <div
+                className="absolute top-40 left-1/2 -translate-x-1/2"
+                style={{
+                  background: "rgba(5,10,25,0.8)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 6,
+                  padding: "4px 16px",
                 }}
               >
                 <span
-                  className="font-display text-6xl font-extrabold tracking-[0.25em] uppercase"
                   style={{
-                    color: pc,
-                    textShadow: `0 0 40px ${pc}cc, 0 0 80px ${pc}66`,
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: 11,
+                    textTransform: "uppercase",
                   }}
                 >
-                  REPLAY
+                  {replayEvent}
                 </span>
-              </motion.div>
-              <div
-                className="font-display text-xl font-bold tracking-widest uppercase"
-                style={{
-                  color: "rgba(255,255,255,0.85)",
-                  textShadow: "0 0 16px rgba(255,255,255,0.3)",
-                }}
-              >
-                {replayEvent}
               </div>
-              <div
-                className="font-body text-xs tracking-widest uppercase mt-2"
-                style={{ color: "rgba(255,255,255,0.35)" }}
-              >
-                SLOW MOTION · SIDE ANGLE
-              </div>
-            </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Innings Break Overlay */}
+      {/* ===== INNINGS BREAK OVERLAY ===== */}
       <AnimatePresence>
         {inningsBreak && (
           <motion.div
@@ -1273,96 +2395,82 @@ export default function HUD() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="absolute inset-0 flex flex-col items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center"
             style={{
-              background: "rgba(0,20,10,0.88)",
-              zIndex: 60,
+              background: "rgba(5,10,25,0.88)",
+              zIndex: 70,
               pointerEvents: "auto",
             }}
-            data-ocid="game.dialog"
           >
             <motion.div
-              initial={{ scale: 0.85, y: 30, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.85, y: 20, opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="flex flex-col items-center gap-6 px-8 py-10 rounded-2xl max-w-sm w-full mx-4"
+              initial={{ scale: 0.85, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="flex flex-col items-center gap-5 rounded-2xl p-8"
               style={{
-                background: "rgba(0,40,20,0.92)",
-                border: "2px solid rgba(20,200,80,0.4)",
-                boxShadow:
-                  "0 8px 60px rgba(0,0,0,0.7), 0 0 40px rgba(20,200,80,0.15)",
+                background: "rgba(10,21,32,0.97)",
+                border: `2px solid ${RC_BTN_BORDER}`,
+                maxWidth: 400,
+                width: "90vw",
               }}
             >
-              <div className="text-center">
-                <div
-                  className="font-display text-3xl font-extrabold tracking-widest uppercase mb-1"
-                  style={{
-                    color: "#22c55e",
-                    textShadow: "0 0 24px rgba(34,197,94,0.6)",
-                  }}
-                >
-                  End of Innings 1
-                </div>
-                <div className="font-body text-white/50 text-sm tracking-wider">
-                  Player 2 batting complete
-                </div>
-              </div>
               <div
-                className="rounded-xl px-6 py-4 w-full flex justify-around"
                 style={{
-                  background: "rgba(0,0,0,0.35)",
-                  border: "1px solid rgba(34,197,94,0.25)",
+                  color: RC_TEAL,
+                  fontSize: 22,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
                 }}
               >
-                <ScoreChip
-                  label="RUNS"
-                  value={String(innings1Score.runs)}
-                  color="#22c55e"
-                />
-                <ScoreChip
-                  label="WKTS"
-                  value={`${innings1Score.wickets}/10`}
-                  color="#22c55e"
-                />
-                <ScoreChip
-                  label="OVERS"
-                  value={`${innings1Score.overs}.${innings1Score.balls}`}
-                  color="#22c55e"
-                />
+                INNINGS BREAK
               </div>
-              <div className="text-center">
-                <div className="text-2xl mb-1">🏏</div>
-                <div
-                  className="font-display text-lg font-bold tracking-wide"
-                  style={{ color: "#fff" }}
-                >
-                  Player 1 — it's your turn to BAT!
-                </div>
-                <div className="font-body text-white/40 text-sm mt-1">
-                  Target: {innings1Score.runs + 1} runs
-                </div>
+              <div
+                style={{
+                  color: "rgba(255,255,255,0.65)",
+                  fontSize: 13,
+                  textAlign: "center",
+                }}
+              >
+                {teamName} scored {innings1Score.runs}/{innings1Score.wickets}{" "}
+                in {innings1Score.overs}.{innings1Score.balls} overs
+              </div>
+              <div
+                style={{
+                  color: "rgba(255,255,255,0.45)",
+                  fontSize: 11,
+                  textAlign: "center",
+                }}
+              >
+                Player 2 needs {innings1Score.runs + 1} to win
               </div>
               <button
                 type="button"
-                data-ocid="game.confirm_button"
+                data-ocid="game.primary_button"
                 onClick={startInnings2}
-                className="font-display font-bold uppercase tracking-wider px-8 py-3 rounded-xl text-sm transition-all duration-150 hover:scale-105"
                 style={{
-                  background: "#22c55e",
-                  color: "#001a0a",
+                  background: `linear-gradient(135deg, ${RC_TEAL}, #006080)`,
+                  color: "#ffffff",
+                  border: `2px solid ${RC_TEAL}`,
+                  borderRadius: 10,
+                  padding: "12px 32px",
+                  fontSize: 13,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
                   cursor: "pointer",
-                  boxShadow: "0 0 24px rgba(34,197,94,0.4)",
+                  boxShadow: `0 0 20px ${RC_TEAL}55`,
                 }}
               >
-                Start Innings 2 →
+                Start Innings 2
               </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Game Over Overlay */}
+      {/* ===== GAME OVER OVERLAY ===== */}
       <AnimatePresence>
         {gameOver && (
           <motion.div
@@ -1370,68 +2478,79 @@ export default function HUD() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="absolute inset-0 flex flex-col items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center"
             style={{
-              background: "rgba(10,5,0,0.90)",
-              zIndex: 60,
+              background: "rgba(5,10,25,0.9)",
+              zIndex: 70,
               pointerEvents: "auto",
             }}
-            data-ocid="game.dialog"
           >
             <motion.div
-              initial={{ scale: 0.85, y: 30, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="flex flex-col items-center gap-6 px-8 py-10 rounded-2xl max-w-sm w-full mx-4"
+              initial={{ scale: 0.85, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="flex flex-col items-center gap-5 rounded-2xl p-8"
               style={{
-                background: "rgba(30,15,0,0.95)",
-                border: `2px solid ${pc}66`,
-                boxShadow: `0 8px 60px rgba(0,0,0,0.8), 0 0 60px ${pc}33`,
+                background: "rgba(10,21,32,0.97)",
+                border: `2px solid ${RC_BTN_BORDER}`,
+                maxWidth: 440,
+                width: "90vw",
               }}
             >
-              <div className="text-center">
+              <div
+                style={{
+                  color: "#F57C00",
+                  fontSize: 20,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  textShadow: "0 0 16px rgba(245,124,0,0.6)",
+                }}
+              >
+                MATCH OVER
+              </div>
+              {multiplayerEnabled && (
                 <div
-                  className="font-display text-4xl font-extrabold tracking-[0.2em] uppercase mb-2"
-                  style={{ color: pc, textShadow: `0 0 30px ${pc}99` }}
-                >
-                  Match Over
-                </div>
-                <div
-                  className="font-display text-xl font-bold tracking-wide"
-                  style={{
-                    color: "#FFD700",
-                    textShadow: "0 0 16px rgba(255,215,0,0.6)",
-                  }}
+                  style={{ color: "#F57C00", fontSize: 18, fontWeight: 800 }}
                 >
                   {winnerText}
                 </div>
-              </div>
+              )}
               <div className="w-full flex flex-col gap-3">
                 <div
                   className="rounded-xl px-5 py-4"
                   style={{
                     background: "rgba(255,255,255,0.05)",
-                    border: `1px solid ${pc}33`,
+                    border: `1px solid ${RC_BTN_BORDER}`,
                   }}
                 >
-                  <div className="font-body text-xs text-white/40 uppercase tracking-widest mb-2">
+                  <div
+                    style={{
+                      color: "rgba(255,255,255,0.4)",
+                      fontSize: 10,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.15em",
+                      marginBottom: 8,
+                    }}
+                  >
                     Player 1 (Innings 2)
                   </div>
                   <div className="flex justify-around">
                     <ScoreChip
                       label="RUNS"
                       value={String(p1Innings.runs)}
-                      color={pc}
+                      color={RC_TEAL}
                     />
                     <ScoreChip
                       label="WKTS"
                       value={`${p1Innings.wickets}/10`}
-                      color={pc}
+                      color={RC_TEAL}
                     />
                     <ScoreChip
                       label="OVERS"
                       value={`${p1Innings.overs}.${p1Innings.balls}`}
-                      color={pc}
+                      color={RC_TEAL}
                     />
                   </div>
                 </div>
@@ -1442,7 +2561,15 @@ export default function HUD() {
                     border: "1px solid rgba(255,255,255,0.12)",
                   }}
                 >
-                  <div className="font-body text-xs text-white/40 uppercase tracking-widest mb-2">
+                  <div
+                    style={{
+                      color: "rgba(255,255,255,0.4)",
+                      fontSize: 10,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.15em",
+                      marginBottom: 8,
+                    }}
+                  >
                     Player 2 (Innings 1)
                   </div>
                   <div className="flex justify-around">
@@ -1468,12 +2595,19 @@ export default function HUD() {
                 type="button"
                 data-ocid="game.primary_button"
                 onClick={resetMultiplayer}
-                className="font-display font-bold uppercase tracking-wider px-8 py-3 rounded-xl text-sm transition-all duration-150 hover:scale-105 w-full"
                 style={{
-                  background: pc,
-                  color: "#0B2E4E",
+                  background: `linear-gradient(135deg, ${RC_TEAL}, #006080)`,
+                  color: "#ffffff",
+                  border: `2px solid ${RC_TEAL}`,
+                  borderRadius: 10,
+                  padding: "12px 32px",
+                  fontSize: 13,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
                   cursor: "pointer",
-                  boxShadow: `0 0 24px ${pc}66`,
+                  width: "100%",
+                  boxShadow: `0 0 20px ${RC_TEAL}55`,
                 }}
               >
                 Play Again
@@ -1483,719 +2617,13 @@ export default function HUD() {
         )}
       </AnimatePresence>
 
-      {/* ===== BOTTOM HUD ===== */}
-      <div
-        className="flex flex-col gap-2 p-3"
-        style={{ pointerEvents: "auto", zIndex: 30, position: "relative" }}
-      >
-        {/* Batting & Bowling Cards Row */}
-        <div className="flex gap-2" style={{ justifyContent: "space-between" }}>
-          {/* BATTING CARD */}
-          <div
-            className="rounded-xl px-2 py-1.5"
-            style={{
-              background: "rgba(4,12,28,0.60)",
-              border: `1px solid ${pc}33`,
-              backdropFilter: "blur(8px)",
-              maxWidth: 140,
-            }}
-          >
-            <div
-              className="font-display text-xs font-bold uppercase tracking-widest mb-1"
-              style={{ color: pc }}
-            >
-              🏏 BATTING
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <BatRow
-                name={batsman1.name}
-                runs={runs}
-                balls={totalBalls}
-                sr={strikeRate}
-                active
-                pc={pc}
-              />
-              <BatRow
-                name={batsman2.name}
-                runs={12}
-                balls={14}
-                sr="85"
-                active={false}
-                pc={pc}
-              />
-            </div>
-          </div>
-
-          {/* BOWLING CARD */}
-          <div
-            className="rounded-xl px-2 py-1.5"
-            style={{
-              background: "rgba(4,12,28,0.60)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              backdropFilter: "blur(8px)",
-              maxWidth: 140,
-            }}
-          >
-            <div
-              className="font-display text-xs font-bold uppercase tracking-widest mb-1"
-              style={{ color: "#60a5fa" }}
-            >
-              ⚽ BOWLING
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center justify-between">
-                <span
-                  className="font-display font-bold"
-                  style={{ color: "rgba(255,255,255,0.85)", fontSize: 9 }}
-                >
-                  {bowler.name}
-                </span>
-                <span
-                  className="font-body text-xs px-1.5 py-0.5 rounded"
-                  style={{
-                    background: "rgba(96,165,250,0.15)",
-                    color: "#60a5fa",
-                    fontSize: 9,
-                  }}
-                >
-                  {bowlingType === "pacer" ? "⚡ PACE" : "🌀 SPIN"}
-                </span>
-              </div>
-              <div className="flex gap-3">
-                <BowlStat label="OVR" value={oversDisplay} />
-                <BowlStat label="ECO" value={economy} />
-                <BowlStat
-                  label="TYPE"
-                  value={bowlingVariant.replace("_", " ").toUpperCase()}
-                />
-              </div>
-              {/* Speed display */}
-              <div className="flex items-center gap-2 mt-0.5">
-                <span
-                  className="font-body text-xs"
-                  style={{ color: "rgba(255,255,255,0.35)", fontSize: 9 }}
-                >
-                  SPEED
-                </span>
-                <div
-                  className="relative flex-1 rounded-full overflow-hidden"
-                  style={{
-                    height: 6,
-                    background: "rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <div
-                    className="absolute left-0 top-0 bottom-0 rounded-full"
-                    style={{
-                      width: `${speedFill}%`,
-                      background: speedColor,
-                      transition: speedLocked ? "width 0.1s" : "none",
-                    }}
-                  />
-                </div>
-                <span
-                  className="font-display text-xs font-bold tabular-nums"
-                  style={{
-                    color: speedColor,
-                    minWidth: 42,
-                    textAlign: "right",
-                  }}
-                >
-                  {speedDisplay} kph
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Multiplayer toggle */}
-        <AnimatePresence>
-          {canBowl && !multiplayerEnabled && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div
-                className="rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{
-                  background: "rgba(4,12,28,0.75)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <button
-                  type="button"
-                  data-ocid="game.toggle"
-                  onClick={() => setMpPanelOpen(!mpPanelOpen)}
-                  className="font-display text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all duration-150"
-                  style={{
-                    background: mpPanelOpen
-                      ? `${pc}33`
-                      : "rgba(255,255,255,0.08)",
-                    color: mpPanelOpen ? pc : "rgba(255,255,255,0.55)",
-                    border: `1px solid ${
-                      mpPanelOpen ? `${pc}55` : "rgba(255,255,255,0.15)"
-                    }`,
-                    cursor: "pointer",
-                  }}
-                >
-                  <Users size={11} className="inline mr-1" />
-                  Local Match
-                </button>
-                {mpPanelOpen && (
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="font-body text-xs"
-                      style={{ color: "rgba(255,255,255,0.4)" }}
-                    >
-                      Overs:
-                    </span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={mpOvers}
-                      onChange={(e) => setMpOvers(Number(e.target.value))}
-                      className="font-display text-xs font-bold w-12 px-2 py-1 rounded text-center"
-                      style={{
-                        background: "rgba(0,0,0,0.4)",
-                        border: "1px solid rgba(255,255,255,0.2)",
-                        color: "#fff",
-                        outline: "none",
-                      }}
-                    />
-                    <button
-                      type="button"
-                      data-ocid="game.primary_button"
-                      onClick={() => {
-                        startMultiplayer(mpOvers);
-                        setMpPanelOpen(false);
-                      }}
-                      className="font-display font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-xs transition-all duration-150 hover:scale-105"
-                      style={{
-                        background: pc,
-                        color: "#0B2E4E",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Start Match
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-          {multiplayerEnabled && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: 0.2 }}
-            >
-              <button
-                type="button"
-                data-ocid="game.toggle"
-                onClick={resetMultiplayer}
-                className="font-body text-xs uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all duration-150"
-                style={{
-                  background: "rgba(255,60,60,0.12)",
-                  color: "rgba(255,120,120,0.8)",
-                  border: "1px solid rgba(255,60,60,0.3)",
-                  cursor: "pointer",
-                }}
-              >
-                Exit Multiplayer
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* BOWLING PHASE CONTROLS */}
-        <AnimatePresence>
-          {canBowl && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-xl px-3 py-2 flex flex-col gap-2"
-              style={{
-                background: "rgba(4,12,28,0.75)",
-                border: `1px solid ${pc}40`,
-                backdropFilter: "blur(8px)",
-              }}
-              data-ocid="game.panel"
-            >
-              {/* Bowler Type */}
-              <div className="flex items-center gap-2">
-                <span
-                  className="font-body text-xs tracking-widest uppercase mr-1"
-                  style={{ color: "rgba(255,255,255,0.35)", fontSize: 9 }}
-                >
-                  TYPE:
-                </span>
-                {(["pacer", "spinner"] as const).map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    data-ocid={`game.${
-                      type === "pacer" ? "primary_button" : "secondary_button"
-                    }`}
-                    onClick={() => handleBowlingTypeSelect(type)}
-                    className="flex flex-col items-center justify-center transition-all duration-150"
-                    style={{
-                      width: 36,
-                      height: 30,
-                      borderRadius: 4,
-                      padding: 0,
-                      background:
-                        bowlingType === type ? `${pc}44` : "rgba(0,0,0,0.5)",
-                      color:
-                        bowlingType === type ? pc : "rgba(255,255,255,0.65)",
-                      border: `1px solid ${bowlingType === type ? `${pc}88` : "rgba(255,255,255,0.2)"}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span style={{ fontSize: 10, lineHeight: 1 }}>
-                      {type === "pacer" ? "⚡" : "🌀"}
-                    </span>
-                    <span style={{ fontSize: 8, fontWeight: 700 }}>
-                      {type === "pacer" ? "PCE" : "SPN"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {/* Variant buttons */}
-              <div className="flex flex-wrap gap-1">
-                {currentVariants.map((v) => (
-                  <button
-                    key={v.id}
-                    type="button"
-                    data-ocid="game.toggle"
-                    onClick={() => handleVariantSelect(v.id)}
-                    className="flex flex-col items-center justify-center transition-all duration-150"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 4,
-                      padding: 0,
-                      background:
-                        bowlingVariant === v.id ? `${pc}44` : "rgba(0,0,0,0.5)",
-                      color:
-                        bowlingVariant === v.id ? pc : "rgba(255,255,255,0.65)",
-                      border: `1px solid ${bowlingVariant === v.id ? `${pc}88` : "rgba(255,255,255,0.2)"}`,
-                      cursor: "pointer",
-                      fontSize: 8,
-                      fontWeight: 700,
-                    }}
-                  >
-                    <span style={{ fontSize: 9, lineHeight: 1 }}>
-                      {v.id === "swing_in"
-                        ? "SI"
-                        : v.id === "swing_out"
-                          ? "SO"
-                          : v.id === "yorker"
-                            ? "YK"
-                            : v.id === "bouncer"
-                              ? "BC"
-                              : v.id === "offspin"
-                                ? "OS"
-                                : "LS"}
-                    </span>
-                    <span style={{ fontSize: 7 }}>{v.label.slice(0, 3)}</span>
-                  </button>
-                ))}
-              </div>
-              {/* Length selector */}
-              <div className="flex items-center gap-2">
-                <span
-                  className="font-body text-xs tracking-widest uppercase mr-1"
-                  style={{ color: "rgba(255,255,255,0.35)", fontSize: 9 }}
-                >
-                  LENGTH:
-                </span>
-                {(["full", "good", "short"] as const).map((len) => (
-                  <button
-                    key={len}
-                    type="button"
-                    data-ocid="game.toggle"
-                    onClick={() => setBowlingLength(len)}
-                    className="flex flex-col items-center justify-center transition-all duration-150"
-                    style={{
-                      width: 34,
-                      height: 30,
-                      borderRadius: 4,
-                      padding: 0,
-                      background:
-                        bowlingLength === len
-                          ? "rgba(96,165,250,0.3)"
-                          : "rgba(0,0,0,0.5)",
-                      color:
-                        bowlingLength === len
-                          ? "#93c5fd"
-                          : "rgba(255,255,255,0.6)",
-                      border: `1px solid ${bowlingLength === len ? "rgba(96,165,250,0.6)" : "rgba(255,255,255,0.2)"}`,
-                      cursor: "pointer",
-                      fontSize: 8,
-                      fontWeight: bowlingLength === len ? 700 : 400,
-                    }}
-                  >
-                    <span style={{ fontSize: 10, lineHeight: 1 }}>
-                      {len === "full" ? "🟡" : len === "good" ? "🟢" : "🔴"}
-                    </span>
-                    <span style={{ fontSize: 8 }}>
-                      {len === "full" ? "FUL" : len === "good" ? "GD" : "SHT"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {/* Speed meter */}
-              <div className="flex items-center gap-3">
-                <span
-                  className="font-body text-xs tracking-widest uppercase"
-                  style={{ color: "rgba(255,255,255,0.35)", fontSize: 9 }}
-                >
-                  SPEED:
-                </span>
-                <div
-                  className="relative flex-1 rounded-full overflow-hidden"
-                  style={{
-                    height: 10,
-                    background: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                  }}
-                >
-                  <div
-                    className="absolute left-0 top-0 bottom-0 rounded-full"
-                    style={{
-                      width: `${speedFill}%`,
-                      background: speedColor,
-                      boxShadow: `0 0 6px ${speedColor}`,
-                      animation: speedLocked
-                        ? "none"
-                        : "speedOscillate 1.8s ease-in-out infinite",
-                      transition: speedLocked ? "width 0.1s" : "none",
-                    }}
-                  />
-                </div>
-                <span
-                  className="font-display text-sm font-bold tabular-nums"
-                  style={{
-                    color: speedLocked ? speedColor : "rgba(255,255,255,0.8)",
-                    minWidth: 52,
-                    textAlign: "right",
-                  }}
-                >
-                  {speedDisplay} kph
-                </span>
-                <button
-                  type="button"
-                  data-ocid="game.toggle"
-                  onClick={lockSpeed}
-                  disabled={speedLocked}
-                  className="font-display text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded"
-                  style={{
-                    background: speedLocked
-                      ? "rgba(255,255,255,0.06)"
-                      : `${speedColor}33`,
-                    color: speedLocked ? "rgba(255,255,255,0.3)" : speedColor,
-                    border: `1px solid ${
-                      speedLocked ? "rgba(255,255,255,0.1)" : `${speedColor}66`
-                    }`,
-                    cursor: speedLocked ? "not-allowed" : "pointer",
-                    transition: "all 0.1s",
-                  }}
-                >
-                  {speedLocked ? "✓ Locked" : "Lock!"}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* BATTING PHASE CONTROLS */}
-        <AnimatePresence>
-          {canSwing && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col gap-2"
-            >
-              {/* Combined Foot + Shot Type row */}
-              <div
-                className="rounded-xl px-2 py-1.5"
-                style={{
-                  background: "rgba(4,12,28,0.9)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <div className="flex gap-1 items-center">
-                  {(
-                    [
-                      { id: "front", label: "FF", icon: "🦶", type: "foot" },
-                      { id: "back", label: "BF", icon: "↩", type: "foot" },
-                      { id: "advance", label: "ADV", icon: "⏩", type: "foot" },
-                      { id: "leave", label: "LV", icon: "⛔", type: "foot" },
-                    ] as const
-                  ).map((fp) => (
-                    <button
-                      key={fp.id}
-                      type="button"
-                      data-ocid="game.toggle"
-                      onClick={() => setFootPosition(fp.id)}
-                      className="flex flex-col items-center justify-center transition-all duration-150"
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 4,
-                        padding: 0,
-                        background:
-                          footPosition === fp.id
-                            ? `${pc}44`
-                            : "rgba(0,0,0,0.5)",
-                        color:
-                          footPosition === fp.id ? pc : "rgba(255,255,255,0.7)",
-                        border: `1px solid ${footPosition === fp.id ? `${pc}88` : "rgba(255,255,255,0.25)"}`,
-                        cursor: "pointer",
-                        boxShadow:
-                          footPosition === fp.id ? `0 0 8px ${pc}44` : "none",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <span style={{ fontSize: 9, lineHeight: 1 }}>
-                        {fp.icon}
-                      </span>
-                      <span
-                        style={{ fontSize: 7, fontWeight: 700, marginTop: 1 }}
-                      >
-                        {fp.label}
-                      </span>
-                    </button>
-                  ))}
-                  <div
-                    style={{
-                      width: 1,
-                      height: 24,
-                      background: "rgba(255,255,255,0.15)",
-                      margin: "0 2px",
-                      flexShrink: 0,
-                    }}
-                  />
-                  {(
-                    [
-                      { id: "push", label: "PSH", icon: "▶" },
-                      { id: "stroke", label: "STR", icon: "🏏" },
-                      { id: "loft", label: "LFT", icon: "🚀" },
-                    ] as const
-                  ).map((st) => (
-                    <button
-                      key={st.id}
-                      type="button"
-                      data-ocid="game.toggle"
-                      onClick={() => {
-                        setShotType(st.id);
-                        shotTypeRef.current = st.id as
-                          | "push"
-                          | "stroke"
-                          | "loft";
-                      }}
-                      className="flex flex-col items-center justify-center transition-all duration-150"
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 4,
-                        padding: 0,
-                        background:
-                          shotType === st.id ? `${pc}44` : "rgba(0,0,0,0.5)",
-                        color:
-                          shotType === st.id ? pc : "rgba(255,255,255,0.7)",
-                        border: `1px solid ${shotType === st.id ? `${pc}88` : "rgba(255,255,255,0.25)"}`,
-                        cursor: "pointer",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <span style={{ fontSize: 9, lineHeight: 1 }}>
-                        {st.icon}
-                      </span>
-                      <span
-                        style={{ fontSize: 7, fontWeight: 700, marginTop: 1 }}
-                      >
-                        {st.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Row 3: Shot Direction */}
-              <div
-                className="rounded-xl overflow-hidden flex"
-                style={{ border: `1px solid ${pc}30` }}
-              >
-                {[
-                  {
-                    dir: "legside" as const,
-                    label: "LEG SIDE",
-                    arrow: "↙️",
-                    bg: "rgba(30,80,200,0.12)",
-                    hoverBg: "rgba(30,80,200,0.25)",
-                    color: "rgba(100,160,255,0.9)",
-                  },
-                  {
-                    dir: "straight" as const,
-                    label: "STRAIGHT",
-                    arrow: "⬆️",
-                    bg: "rgba(255,255,255,0.07)",
-                    hoverBg: "rgba(255,255,255,0.14)",
-                    color: "rgba(255,255,255,0.9)",
-                  },
-                  {
-                    dir: "offside" as const,
-                    label: "OFF SIDE",
-                    arrow: "↘️",
-                    bg: `${pc}18`,
-                    hoverBg: `${pc}30`,
-                    color: `${pc}ee`,
-                  },
-                ].map((z, i) => (
-                  <button
-                    key={z.dir}
-                    type="button"
-                    data-ocid={`game.${
-                      i === 1 ? "primary_button" : "secondary_button"
-                    }`}
-                    onClick={() => triggerShot(z.dir)}
-                    className="flex-1 flex flex-col items-center py-1 transition-all duration-150"
-                    style={{
-                      background: z.bg,
-                      border: "none",
-                      borderLeft:
-                        i > 0 ? "1px solid rgba(255,255,255,0.08)" : "none",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.background =
-                        z.hoverBg;
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = z.bg;
-                    }}
-                  >
-                    <span style={{ fontSize: 16 }}>{z.arrow}</span>
-                    <span
-                      className="font-display text-xs font-bold uppercase tracking-widest mt-0.5"
-                      style={{ color: z.color }}
-                    >
-                      {z.label}
-                    </span>
-                    <span
-                      style={{
-                        color: "rgba(255,255,255,0.3)",
-                        fontSize: 8,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      TAP TO PLAY
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Main scorecard + bowl button */}
-        <div
-          className="rounded-xl flex items-center gap-4 px-5 py-3"
-          style={{
-            background: "rgba(4,12,28,0.95)",
-            border: `1.5px solid ${pc}66`,
-            boxShadow: `0 4px 32px rgba(0,0,0,0.5), 0 0 20px ${pc}14`,
-          }}
-        >
-          <div className="flex flex-1 items-center justify-around gap-2">
-            <ScoreSegment
-              label="RUNS"
-              value={String(runs)}
-              ocid="game.card"
-              color={pc}
-            />
-            <Divider color={pc} />
-            <ScoreSegment
-              label="WKTS"
-              value={`${wickets}/10`}
-              ocid="game.row"
-              color={pc}
-            />
-            <Divider color={pc} />
-            <ScoreSegment
-              label="OVERS"
-              value={oversDisplay}
-              ocid="game.section"
-              color={pc}
-            />
-          </div>
-          {canBowl && (
-            <button
-              type="button"
-              onClick={handleBowl}
-              disabled={!canBowl}
-              data-ocid="game.primary_button"
-              className="font-display font-bold uppercase tracking-wider transition-all duration-150 hover:scale-105"
-              style={{
-                background: pc,
-                color: "#0B2E4E",
-                cursor: "pointer",
-                border: `1.5px solid ${pc}80`,
-                width: 52,
-                height: 52,
-                borderRadius: "50%",
-                fontSize: 11,
-                boxShadow: `0 0 16px ${pc}59`,
-                padding: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              {bowlBtnLabel}
-            </button>
-          )}
-          {canSwing && (
-            <div
-              className="font-body text-xs uppercase tracking-widest animate-pulse"
-              style={{ color: `${pc}aa`, fontSize: 10 }}
-            >
-              TAP SHOT ↓
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-center pb-1">
-          <a
-            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="font-body text-xs text-white/20 hover:text-white/40 transition-colors"
-          >
-            © {new Date().getFullYear()} Built with ❤️ using caffeine.ai
-          </a>
-        </div>
-      </div>
-
-      {/* Match Stats Modal */}
+      {/* ===== STATS MODAL ===== */}
       {statsOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex items-center justify-center"
           style={{
-            zIndex: 200,
-            background: "rgba(0,0,0,0.75)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(5,10,25,0.88)",
+            zIndex: 80,
             pointerEvents: "auto",
           }}
           onClick={() => setStatsOpen(false)}
@@ -2205,8 +2633,8 @@ export default function HUD() {
           <div
             className="rounded-2xl p-5 flex flex-col gap-4"
             style={{
-              background: "rgba(4,12,28,0.97)",
-              border: `1px solid ${pc}44`,
+              background: "rgba(10,21,32,0.98)",
+              border: `1px solid ${RC_BTN_BORDER}`,
               maxWidth: 480,
               width: "95vw",
               maxHeight: "80vh",
@@ -2218,8 +2646,13 @@ export default function HUD() {
           >
             <div className="flex items-center justify-between">
               <span
-                className="font-display text-base font-bold tracking-wider uppercase"
-                style={{ color: pc }}
+                style={{
+                  color: RC_TEAL,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
               >
                 📊 Match Stats
               </span>
@@ -2227,21 +2660,27 @@ export default function HUD() {
                 type="button"
                 data-ocid="stats.close_button"
                 onClick={() => setStatsOpen(false)}
-                className="text-white/40 hover:text-white/80 transition-colors text-lg"
                 style={{
+                  color: "rgba(255,255,255,0.4)",
                   cursor: "pointer",
                   background: "none",
                   border: "none",
+                  fontSize: 18,
                 }}
               >
                 ✕
               </button>
             </div>
-            {/* Batting stats */}
             <div>
               <div
-                className="font-display text-xs font-bold uppercase tracking-widest mb-2"
-                style={{ color: "rgba(255,255,255,0.5)" }}
+                style={{
+                  color: "rgba(255,255,255,0.5)",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  marginBottom: 8,
+                }}
               >
                 🏏 Batting — {teamName}
               </div>
@@ -2284,13 +2723,13 @@ export default function HUD() {
                       >
                         <td className="py-1 pr-2 font-medium">
                           {p.name}{" "}
-                          <span style={{ color: pc, fontSize: 9 }}>
+                          <span style={{ color: RC_TEAL, fontSize: 9 }}>
                             #{p.jersey}
                           </span>
                         </td>
                         <td
                           className="text-right py-1 px-2 font-bold"
-                          style={{ color: isStriker ? pc : undefined }}
+                          style={{ color: isStriker ? RC_TEAL : undefined }}
                         >
                           {pRuns}
                         </td>
@@ -2302,11 +2741,16 @@ export default function HUD() {
                 </tbody>
               </table>
             </div>
-            {/* Bowling stats */}
             <div>
               <div
-                className="font-display text-xs font-bold uppercase tracking-widest mb-2"
-                style={{ color: "rgba(255,255,255,0.5)" }}
+                style={{
+                  color: "rgba(255,255,255,0.5)",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  marginBottom: 8,
+                }}
               >
                 ⚡ Bowling — {opponentName}
               </div>
@@ -2359,7 +2803,7 @@ export default function HUD() {
                         <td className="text-right py-1 px-2">{bRuns}</td>
                         <td
                           className="text-right py-1 px-2 font-bold"
-                          style={{ color: bWickets > 0 ? pc : undefined }}
+                          style={{ color: bWickets > 0 ? RC_TEAL : undefined }}
                         >
                           {bWickets}
                         </td>
@@ -2373,13 +2817,202 @@ export default function HUD() {
         </div>
       )}
 
-      {/* Team Editor Modal */}
+      {/* ===== RUNNING PIP PANEL ===== */}
+      {ballState === "hit" && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 68,
+            right: 8,
+            width: 120,
+            height: 76,
+            background: "rgba(0,0,0,0.72)",
+            backdropFilter: "blur(4px)",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.15)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+            zIndex: 35,
+            overflow: "hidden",
+          }}
+        >
+          <style>{`
+            @keyframes run-anim {
+              0%   { transform: translateX(-18px) scaleX(1); }
+              48%  { transform: translateX(18px) scaleX(1); }
+              50%  { transform: translateX(18px) scaleX(-1); }
+              98%  { transform: translateX(-18px) scaleX(-1); }
+              100% { transform: translateX(-18px) scaleX(1); }
+            }
+            @keyframes leg-l {
+              0%,100% { transform: rotate(-35deg); }
+              50% { transform: rotate(35deg); }
+            }
+            @keyframes leg-r {
+              0%,100% { transform: rotate(35deg); }
+              50% { transform: rotate(-35deg); }
+            }
+            @keyframes arm-l {
+              0%,100% { transform: rotate(30deg); }
+              50% { transform: rotate(-30deg); }
+            }
+            @keyframes arm-r {
+              0%,100% { transform: rotate(-30deg); }
+              50% { transform: rotate(30deg); }
+            }
+            @keyframes pip-pulse {
+              0%,100% { opacity: 1; }
+              50% { opacity: 0.6; }
+            }
+          `}</style>
+          {/* Stick figure runner */}
+          <div
+            style={{
+              position: "relative",
+              width: 44,
+              height: 44,
+              animation: "run-anim 0.9s linear infinite",
+            }}
+          >
+            {/* Head */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 17,
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: "#f5c5a3",
+                border: "1.5px solid rgba(255,255,255,0.4)",
+              }}
+            />
+            {/* Body */}
+            <div
+              style={{
+                position: "absolute",
+                top: 10,
+                left: 20,
+                width: 2.5,
+                height: 14,
+                background: "#fff",
+                borderRadius: 2,
+              }}
+            />
+            {/* Left arm */}
+            <div
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 10,
+                width: 10,
+                height: 2.5,
+                background: "#4fc3f7",
+                borderRadius: 2,
+                transformOrigin: "right center",
+                animation: "arm-l 0.45s ease-in-out infinite",
+              }}
+            />
+            {/* Right arm */}
+            <div
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 22,
+                width: 10,
+                height: 2.5,
+                background: "#4fc3f7",
+                borderRadius: 2,
+                transformOrigin: "left center",
+                animation: "arm-r 0.45s ease-in-out infinite",
+              }}
+            />
+            {/* Left leg */}
+            <div
+              style={{
+                position: "absolute",
+                top: 22,
+                left: 14,
+                width: 2.5,
+                height: 14,
+                background: "#f5f5f5",
+                borderRadius: 2,
+                transformOrigin: "top center",
+                animation: "leg-l 0.45s ease-in-out infinite",
+              }}
+            />
+            {/* Right leg */}
+            <div
+              style={{
+                position: "absolute",
+                top: 22,
+                left: 22,
+                width: 2.5,
+                height: 14,
+                background: "#f5f5f5",
+                borderRadius: 2,
+                transformOrigin: "top center",
+                animation: "leg-r 0.45s ease-in-out infinite",
+              }}
+            />
+          </div>
+          {/* Ground line */}
+          <div
+            style={{
+              width: 90,
+              height: 1.5,
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: 1,
+            }}
+          />
+          <span
+            style={{
+              color: "#4fc3f7",
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              animation: "pip-pulse 1s ease-in-out infinite",
+            }}
+          >
+            🏃 RUNNING
+          </span>
+        </div>
+      )}
+
+      {/* ===== BOTTOM SCOREBAR ===== */}
+      <div className="absolute bottom-0 left-0 right-0" style={{ zIndex: 40 }}>
+        <RCScorebar
+          runs={runs}
+          wickets={wickets}
+          overs={overs}
+          balls={balls}
+          maxOvers={maxOvers}
+          batsman1={INDIA_SQUAD[0].name}
+          batsman2={INDIA_SQUAD[1].name}
+          batsman1Runs={runs}
+          batsman1Balls={totalBalls}
+          batsman2Runs={12}
+          batsman2Balls={14}
+          bowlerName={bowler.name}
+          bowlerOvers={oversDisplay}
+          bowlerRuns={runs}
+          bowlerWickets={wickets}
+          teamName={teamName}
+          opponentName={opponentName}
+          lastEvent={lastEvent}
+          eventKey={eventKey}
+        />
+      </div>
+
+      {/* ===== MODALS ===== */}
       <TeamEditorModal
         open={teamEditorOpen}
         onClose={() => setTeamEditorOpen(false)}
       />
-
-      {/* Online Lobby Modal */}
       <OnlineLobbyModal
         open={onlineLobbyOpen}
         onClose={() => setOnlineLobbyOpen(false)}
@@ -2388,138 +3021,7 @@ export default function HUD() {
   );
 }
 
-function BatRow({
-  name,
-  runs: r,
-  balls: b,
-  sr,
-  active,
-  pc,
-}: {
-  name: string;
-  runs: number;
-  balls: number;
-  sr: string;
-  active: boolean;
-  pc: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-1">
-        {active && (
-          <span
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: "50%",
-              background: pc,
-              display: "inline-block",
-            }}
-          />
-        )}
-        <span
-          className="font-display text-xs font-bold truncate"
-          style={{
-            color: active ? "#fff" : "rgba(255,255,255,0.45)",
-            maxWidth: 90,
-            fontSize: 9,
-          }}
-        >
-          {name}
-        </span>
-      </div>
-      <div className="flex gap-2">
-        <BatStat label="R" value={String(r)} active={active} pc={pc} />
-        <BatStat label="B" value={String(b)} active={active} pc={pc} />
-        <BatStat label="SR" value={sr} active={active} pc={pc} />
-      </div>
-    </div>
-  );
-}
-
-function BatStat({
-  label,
-  value,
-  active,
-  pc,
-}: { label: string; value: string; active: boolean; pc: string }) {
-  return (
-    <div className="flex flex-col items-center" style={{ minWidth: 22 }}>
-      <span
-        style={{
-          color: "rgba(255,255,255,0.3)",
-          fontSize: 7,
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          color: active ? pc : "rgba(255,255,255,0.5)",
-          fontSize: 11,
-          fontWeight: 700,
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function BowlStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col" style={{ minWidth: 36 }}>
-      <span
-        style={{
-          color: "rgba(255,255,255,0.3)",
-          fontSize: 7,
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          color: "rgba(255,255,255,0.7)",
-          fontSize: 10,
-          fontWeight: 600,
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function ScoreSegment({
-  label,
-  value,
-  ocid,
-  color,
-}: { label: string; value: string; ocid: string; color: string }) {
-  return (
-    <div className="flex flex-col items-center gap-0.5" data-ocid={ocid}>
-      <span
-        className="font-body text-xs font-medium tracking-widest uppercase"
-        style={{ color: `${color}a6` }}
-      >
-        {label}
-      </span>
-      <span
-        className="font-display text-2xl font-extrabold leading-none"
-        style={{ color: "#ffffff" }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function Divider({ color }: { color: string }) {
-  return <div className="h-10 w-px" style={{ background: `${color}40` }} />;
-}
-
+// ===== HELPER COMPONENTS =====
 function ScoreChip({
   label,
   value,
@@ -2528,14 +3030,16 @@ function ScoreChip({
   return (
     <div className="flex flex-col items-center gap-0.5">
       <span
-        className="font-body text-xs uppercase tracking-widest"
-        style={{ color: `${color}99` }}
+        style={{
+          color: `${color}99`,
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+        }}
       >
         {label}
       </span>
-      <span className="font-display text-xl font-extrabold" style={{ color }}>
-        {value}
-      </span>
+      <span style={{ color, fontSize: 20, fontWeight: 900 }}>{value}</span>
     </div>
   );
 }

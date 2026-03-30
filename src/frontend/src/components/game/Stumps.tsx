@@ -68,22 +68,34 @@ export default function Stumps({ stumpEnd }: StumpsProps) {
 
   return (
     <group ref={groupRef} position={[0, 0, z]}>
-      {/* Three stumps */}
+      {/* Three stumps — upgraded to MeshStandardMaterial for PBR quality */}
       {STUMP_POSITIONS.map((pos, idx) => (
-        <mesh key={STUMP_KEYS[idx]} position={pos} castShadow>
-          <cylinderGeometry args={[0.025, 0.025, 0.72, 8]} />
-          <meshLambertMaterial color="#f5deb3" />
+        <mesh key={STUMP_KEYS[idx]} position={pos} castShadow receiveShadow>
+          <cylinderGeometry args={[0.025, 0.025, 0.72, 10]} />
+          <meshStandardMaterial
+            color="#f0e0b0"
+            roughness={0.4}
+            metalness={0.05}
+          />
         </mesh>
       ))}
       {/* Bail 1 */}
-      <mesh position={[-0.055, 0.73, 0]} castShadow>
+      <mesh position={[-0.055, 0.73, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.12, 0.04, 0.04]} />
-        <meshLambertMaterial color="#f5deb3" />
+        <meshStandardMaterial
+          color="#f0e0b0"
+          roughness={0.4}
+          metalness={0.05}
+        />
       </mesh>
       {/* Bail 2 */}
-      <mesh position={[0.055, 0.73, 0]} castShadow>
+      <mesh position={[0.055, 0.73, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.12, 0.04, 0.04]} />
-        <meshLambertMaterial color="#f5deb3" />
+        <meshStandardMaterial
+          color="#f0e0b0"
+          roughness={0.4}
+          metalness={0.05}
+        />
       </mesh>
     </group>
   );
