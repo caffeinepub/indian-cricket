@@ -59,3 +59,8 @@ export const fielderPositionsRef: {
 
 /** Runs scored on the current ball delivery (for run-out logic) */
 export const lastBallRunsRef: { current: number } = { current: 0 };
+
+/** Current shot type chosen by the player */
+export const shotTypeRef: { current: "push" | "stroke" | "loft" } = {
+  current: "stroke",
+};

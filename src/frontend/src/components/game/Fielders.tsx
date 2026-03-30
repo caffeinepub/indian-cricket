@@ -9,26 +9,32 @@ import {
 } from "../../refs/sharedRefs";
 import { useGameStore } from "../../store/gameStore";
 
-// Fielder positions: avoid pitch area (x: -1.5 to 1.5, z: -10 to 10)
 const FIELDER_POSITIONS: Array<[number, number, number]> = [
-  [3.5, 0, 12], // slip (behind batsman, off side)
-  [14, 0, 4], // point
-  [-8, 0, -5], // mid-on
-  [7, 0, -6], // mid-off
-  [-12, 0, 13], // fine leg
-  [12, 0, -2], // cover
-  [-12, 0, 6], // square leg
+  [3.5, 0, 12],
+  [14, 0, 4],
+  [-8, 0, -5],
+  [7, 0, -6],
+  [-12, 0, 13],
+  [12, 0, -2],
+  [-12, 0, 6],
 ];
 
 const FIELDER_COLORS = [
-  "#1a237e", // slip - deep navy
-  "#0d47a1", // point
-  "#1565c0", // mid-on
-  "#1976d2", // mid-off
-  "#1e88e5", // fine leg
-  "#2196f3", // cover
-  "#42a5f5", // square leg
+  "#1a237e",
+  "#0d47a1",
+  "#1565c0",
+  "#1976d2",
+  "#1e88e5",
+  "#2196f3",
+  "#42a5f5",
 ];
+
+// Varied skin tones seeded by fielder index
+const SKIN_TONES = ["#8B6914", "#c68642", "#f5c5a3", "#b87333", "#8B4513"];
+
+function getFielderSkinTone(index: number): string {
+  return SKIN_TONES[index % SKIN_TONES.length];
+}
 
 interface FielderState {
   pos: THREE.Vector3;
@@ -49,32 +55,33 @@ function FielderMesh({
   fielderState: FielderState;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const bodyRef = useRef<THREE.Mesh>(null);
-  const headRef = useRef<THREE.Mesh>(null);
-  const armLRef = useRef<THREE.Mesh>(null);
   const armRRef = useRef<THREE.Mesh>(null);
 
   fielderState.bodyRef =
     groupRef as unknown as React.RefObject<THREE.Group | null>;
 
   const color = FIELDER_COLORS[index] ?? "#1976d2";
+  const skin = getFielderSkinTone(index);
 
   useFrame(() => {
     const group = groupRef.current;
     if (!group) return;
 
-    // Update group position from state
     group.position.copy(fielderState.pos);
 
-    // Dive tilt
     if (fielderState.phase === "diving") {
       const tilt = Math.min(fielderState.diveProgress * 1.5, Math.PI / 2.2);
-      group.rotation.x = tilt;
+      group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, tilt, 0.15);
+      group.position.y = THREE.MathUtils.lerp(group.position.y, -0.25, 0.1);
     } else {
       group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, 0, 0.1);
+      group.position.y = THREE.MathUtils.lerp(
+        group.position.y,
+        fielderState.pos.y,
+        0.1,
+      );
     }
 
-    // Arm throw animation
     if (armRRef.current) {
       armRRef.current.rotation.z = THREE.MathUtils.lerp(
         armRRef.current.rotation.z,
@@ -86,34 +93,151 @@ function FielderMesh({
 
   return (
     <group ref={groupRef} position={FIELDER_POSITIONS[index]}>
-      {/* Body */}
-      <mesh ref={bodyRef} position={[0, 0.75, 0]} castShadow>
-        <cylinderGeometry args={[0.22, 0.26, 0.9, 8]} />
-        <meshStandardMaterial color={color} roughness={0.6} />
-      </mesh>
-      {/* Head */}
-      <mesh ref={headRef} position={[0, 1.45, 0]} castShadow>
-        <sphereGeometry args={[0.22, 12, 12]} />
-        <meshStandardMaterial color="#c68642" roughness={0.7} />
-      </mesh>
-      {/* Left arm */}
-      <mesh ref={armLRef} position={[-0.38, 0.85, 0]} rotation={[0, 0, 0.4]}>
-        <cylinderGeometry args={[0.07, 0.07, 0.55, 6]} />
-        <meshStandardMaterial color={color} roughness={0.6} />
-      </mesh>
-      {/* Right arm (throwing) */}
-      <mesh ref={armRRef} position={[0.38, 0.85, 0]} rotation={[0, 0, -0.4]}>
-        <cylinderGeometry args={[0.07, 0.07, 0.55, 6]} />
-        <meshStandardMaterial color={color} roughness={0.6} />
-      </mesh>
       {/* Legs */}
-      <mesh position={[-0.12, 0.18, 0]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.5, 6]} />
-        <meshStandardMaterial color="#f5f5f5" roughness={0.5} />
+      <mesh position={[-0.13, 0.52, 0]} castShadow>
+        <cylinderGeometry args={[0.09, 0.08, 0.5, 12]} />
+        <meshPhysicalMaterial
+          color="#f5f5f5"
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
       </mesh>
-      <mesh position={[0.12, 0.18, 0]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.5, 6]} />
-        <meshStandardMaterial color="#f5f5f5" roughness={0.5} />
+      {/* Left knee joint */}
+      <mesh position={[-0.13, 0.27, 0]} castShadow>
+        <sphereGeometry args={[0.09, 8, 8]} />
+        <meshPhysicalMaterial color="#f5f5f5" roughness={0.85} metalness={0} />
+      </mesh>
+      <mesh position={[-0.13, 0.2, 0]} castShadow>
+        <cylinderGeometry args={[0.08, 0.07, 0.44, 12]} />
+        <meshPhysicalMaterial
+          color="#f5f5f5"
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
+      </mesh>
+      {/* Left boot */}
+      <mesh position={[-0.13, 0.03, 0.05]} castShadow>
+        <boxGeometry args={[0.11, 0.06, 0.2]} />
+        <meshPhysicalMaterial color="#1a1a1a" roughness={0.7} metalness={0.1} />
+      </mesh>
+
+      <mesh position={[0.13, 0.52, 0]} castShadow>
+        <cylinderGeometry args={[0.09, 0.08, 0.5, 12]} />
+        <meshPhysicalMaterial
+          color="#f5f5f5"
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
+      </mesh>
+      {/* Right knee joint */}
+      <mesh position={[0.13, 0.27, 0]} castShadow>
+        <sphereGeometry args={[0.09, 8, 8]} />
+        <meshPhysicalMaterial color="#f5f5f5" roughness={0.85} metalness={0} />
+      </mesh>
+      <mesh position={[0.13, 0.2, 0]} castShadow>
+        <cylinderGeometry args={[0.08, 0.07, 0.44, 12]} />
+        <meshPhysicalMaterial
+          color="#f5f5f5"
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
+      </mesh>
+      {/* Right boot */}
+      <mesh position={[0.13, 0.03, 0.05]} castShadow>
+        <boxGeometry args={[0.11, 0.06, 0.2]} />
+        <meshPhysicalMaterial color="#1a1a1a" roughness={0.7} metalness={0.1} />
+      </mesh>
+
+      {/* Torso */}
+      <mesh position={[0, 0.93, 0]} castShadow>
+        <boxGeometry args={[0.5, 0.68, 0.26]} />
+        <meshPhysicalMaterial
+          color={color}
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
+      </mesh>
+      <mesh position={[0, 1.22, 0]} castShadow>
+        <boxGeometry args={[0.58, 0.13, 0.24]} />
+        <meshPhysicalMaterial
+          color={color}
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
+      </mesh>
+
+      {/* Left arm */}
+      <mesh position={[-0.36, 1.0, 0]} rotation={[0, 0, 0.35]} castShadow>
+        <cylinderGeometry args={[0.07, 0.06, 0.4, 12]} />
+        <meshPhysicalMaterial
+          color={color}
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
+      </mesh>
+      {/* Left elbow joint */}
+      <mesh position={[-0.44, 0.86, 0]} castShadow>
+        <sphereGeometry args={[0.065, 8, 8]} />
+        <meshPhysicalMaterial color={skin} roughness={0.85} metalness={0} />
+      </mesh>
+      <mesh position={[-0.48, 0.83, 0]} rotation={[0, 0, 0.2]} castShadow>
+        <cylinderGeometry args={[0.06, 0.05, 0.34, 12]} />
+        <meshPhysicalMaterial color={skin} roughness={0.85} metalness={0} />
+      </mesh>
+
+      {/* Right arm (throwing) */}
+      <mesh
+        ref={armRRef}
+        position={[0.36, 1.0, 0]}
+        rotation={[0, 0, -0.4]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.07, 0.06, 0.4, 12]} />
+        <meshPhysicalMaterial
+          color={color}
+          roughness={0.85}
+          metalness={0}
+          sheen={0.4}
+        />
+      </mesh>
+      {/* Right elbow joint */}
+      <mesh position={[0.44, 0.86, 0]} castShadow>
+        <sphereGeometry args={[0.065, 8, 8]} />
+        <meshPhysicalMaterial color={skin} roughness={0.85} metalness={0} />
+      </mesh>
+      <mesh position={[0.48, 0.83, 0]} rotation={[0, 0, -0.2]} castShadow>
+        <cylinderGeometry args={[0.06, 0.05, 0.34, 12]} />
+        <meshPhysicalMaterial color={skin} roughness={0.85} metalness={0} />
+      </mesh>
+
+      {/* Neck */}
+      <mesh position={[0, 1.35, 0]} castShadow>
+        <cylinderGeometry args={[0.065, 0.08, 0.16, 8]} />
+        <meshPhysicalMaterial color={skin} roughness={0.85} metalness={0} />
+      </mesh>
+
+      {/* Head */}
+      <mesh position={[0, 1.53, 0]} castShadow>
+        <sphereGeometry args={[0.2, 12, 12]} />
+        <meshPhysicalMaterial color={skin} roughness={0.85} metalness={0} />
+      </mesh>
+
+      {/* Cricket cap top */}
+      <mesh position={[0, 1.68, 0]} castShadow>
+        <cylinderGeometry args={[0.21, 0.21, 0.13, 10]} />
+        <meshStandardMaterial color={color} roughness={0.7} />
+      </mesh>
+      {/* Cap brim */}
+      <mesh position={[0, 1.64, 0.2]} castShadow>
+        <boxGeometry args={[0.26, 0.045, 0.14]} />
+        <meshStandardMaterial color={color} roughness={0.7} />
       </mesh>
     </group>
   );
@@ -136,7 +260,6 @@ export default function Fielders() {
     })),
   );
 
-  // Track which fielder is active
   const activeFielderIdx = useRef<number>(-1);
   const catchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const throwTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -146,7 +269,6 @@ export default function Fielders() {
     ballStateRef.current = ballState;
 
     if (ballState === "idle") {
-      // Reset all fielders to base positions
       fielderCaughtRef.current = false;
       activeFielderIdx.current = -1;
       for (const fs of fielderStates.current) {
@@ -180,21 +302,19 @@ export default function Fielders() {
         }
 
         if (fs.phase === "moving") {
-          // Move toward ball
           const dir = ballVec.clone().sub(fs.pos).normalize();
           fs.pos.addScaledVector(dir, delta * 5.5);
           fs.pos.y = 0;
 
           const newDist = fs.pos.distanceTo(ballVec);
           if (newDist < 2.5 && !fielderCaughtRef.current) {
-            // Start dive
             fs.phase = "diving";
             fs.diveProgress = 0;
 
             catchTimerRef.current = setTimeout(() => {
               fielderCaughtRef.current = true;
               fs.phase = "throwing";
-              fs.targetArmAngle = -2.2; // raise arm for throw
+              fs.targetArmAngle = -2.2;
 
               const runsOnBall = lastBallRunsRef.current;
 
@@ -202,7 +322,6 @@ export default function Fielders() {
                 fs.targetArmAngle = -0.4;
                 fs.phase = "returning";
 
-                // Run-out: if 0 or 1 run scored (batsman still running)
                 if (runsOnBall <= 1 && ballStateRef.current === "hit") {
                   useGameStore.getState().takeWicket("RUN OUT");
                 } else {
@@ -226,7 +345,6 @@ export default function Fielders() {
     }
   });
 
-  // Update fielderPositionsRef for camera controller
   useFrame(() => {
     fielderPositionsRef.current = fielderStates.current.map(
       (fs) => [fs.pos.x, fs.pos.y, fs.pos.z] as [number, number, number],

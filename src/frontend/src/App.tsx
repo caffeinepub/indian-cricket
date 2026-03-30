@@ -3,6 +3,7 @@ import { Physics } from "@react-three/cannon";
 import { Sky } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect } from "react";
+import * as THREE from "three";
 import HUD from "./components/HUD";
 import Batsman from "./components/game/Batsman";
 import Bowler from "./components/game/Bowler";
@@ -24,7 +25,6 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && ballState === "bowled") {
         e.preventDefault();
-        // Space bar uses null timing (legacy/compatible)
         timingQualityRef.current = null;
         swingRequestRef.current = true;
         useGameStore.getState().swing();
@@ -45,29 +45,44 @@ export default function App() {
       }}
     >
       <Canvas
-        shadows
-        camera={{ position: [0, 4, 16], fov: 60, near: 0.1, far: 500 }}
+        camera={{ position: [0, 4, 16], fov: 68, near: 0.1, far: 500 }}
         style={{ width: "100%", height: "100%" }}
-        gl={{ antialias: true }}
+        gl={{
+          antialias: true,
+          shadowMap: { enabled: true, type: THREE.PCFSoftShadowMap } as never,
+        }}
+        shadows
       >
         <Suspense fallback={null}>
           {!isNight && (
             <Sky sunPosition={[100, 25, 50]} turbidity={6} rayleigh={1} />
           )}
 
-          <ambientLight intensity={isNight ? 0.08 : 0.55} />
+          {/* Hemisphere light for natural daylight feel */}
+          <hemisphereLight
+            args={["#87CEEB", "#3a7d2a", isNight ? 0.15 : 0.8]}
+          />
+
+          {/* Main sun directional light */}
           <directionalLight
             position={[15, 30, 10]}
-            intensity={isNight ? 0.15 : 1.2}
+            intensity={isNight ? 0.15 : 1.6}
             castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
+            shadow-mapSize-width={4096}
+            shadow-mapSize-height={4096}
             shadow-camera-near={0.5}
             shadow-camera-far={200}
             shadow-camera-left={-60}
             shadow-camera-right={60}
             shadow-camera-top={60}
             shadow-camera-bottom={-60}
+            shadow-radius={8}
+          />
+
+          {/* Fill light for softer shadows */}
+          <directionalLight
+            position={[-10, 15, -5]}
+            intensity={isNight ? 0.05 : 0.35}
           />
 
           <CameraController />
@@ -79,7 +94,6 @@ export default function App() {
             <PhysicsWorld />
           </Physics>
 
-          {/* Visual-only scene elements */}
           <Stadium nightMode={isNight} />
           <Stumps stumpEnd="batsman" />
           <Stumps stumpEnd="bowler" />

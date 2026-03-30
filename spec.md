@@ -1,39 +1,47 @@
-# Indian Cricket - Professional Gameplay Refinements
+# Indian Cricket Game
 
 ## Current State
-- 3D cricket game with batsman, bowler, stumps, stadium, physics world
-- Batting: tap zones (legside/straight/offside) trigger shot animations; ball velocity set immediately on swingRequest
-- Bowling: pacer/spinner type + variant selection panel; ball launched with preset velocities
-- Camera: CameraController follows ball; cinematic replay after boundaries/wickets
-- HUD: score overlay, shot name toast, replay overlay
-- No timing meter, no bowling speed meter, no length selection, no fielder AI, no umpire model, no dynamic camera transitions
+Version 12 is live with:
+- Three.js/R3F 3D cricket game with stadium, pitch, crowd
+- Humanoid player models (batsman, bowler, umpire, fielders) with cricket gear
+- Real India vs Australia player squads
+- WCC3-style compact HUD (batting card, bowling card, fielding radar)
+- Batting: timing meter, Front Foot/Back Foot/Advance/Leave, Push/Stroke/Loft (Loft = air shot)
+- Bowling: Pacer/Spinner with variants (Swing, Yorker, Bouncer, Off-Spin, Leg-Spin)
+- Cinematic broadcast camera with delivery zoom and follow-ball
+- Slow-motion replay on boundaries/wickets
+- Team Editor with gear color pickers and face texture upload slot
+- Local multiplayer (P1 bowls, P2 bats, swap innings)
+- Online multiplayer lobby (Quick Match / Play with Friends)
+- Day/Night mode toggle
+- Canvas-generated grass texture with mowing stripes
 
 ## Requested Changes (Diff)
 
 ### Add
-1. **Batting Timing Meter** - Animated oscillating bar next to the batsman on screen. When ball is bowled and in flight, meter fills/depletes in a cycle. Player taps at peak = "Perfect Shot" (extra velocity multiplier). Too early/late = edge (ball deflects weakly to slip/fine leg) or miss (no contact, wicket logic).
-2. **Bowling Length Selector** - Before each delivery, let bowler pick 'Full', 'Good', or 'Short' length. Full = yorker-style pitch, Good = mid-pitch, Short = bouncer-style. Affects ball physics on launch.
-3. **Bowling Speed Meter** - Oscillating speed bar (fluctuates 60-150 kph range) visible during bowling phase. Player must tap "Bowl!" at highest point to unlock maximum pace. Speed multiplier applied to ball velocity.
-4. **Fielder AI** - Place 6-8 fielder meshes around the outfield/infield. When ball is hit, nearest fielder runs toward ball position, plays a dive/lunge animation when close, then throws ball back (ball resets after throw animation). Add run-out logic: if batsman attempts run and fielder throws before batsman crosses crease, it's a run-out wicket. Add stumping logic: if ball passes batsman and wicketkeeper catches it quickly, stumping out.
-5. **Umpire Model** - 3D umpire figure standing at square leg. After each delivery outcome, plays arm-signal animation: arms wide for 4, both arms up for 6, finger raised for Out, one arm extended for Wide.
-6. **Dynamic Camera Transitions** - When ball is hit and airborne (y > 3), switch to a high wide "stadium" camera showing full trajectory. When ball descends near a fielder or boundary, zoom back to close-up of that position. Use smooth lerp transitions between camera modes.
+- Ball-trail motion blur effect (streak behind the ball during flight)
+- Pitch impact dust puff particle effect on ball bounce
+- Difficulty selector (Easy/Medium/Hard) affecting fielder speed, timing window, AI bowling variation
+- Match statistics screen (runs per over, highest scorer, bowling figures)
+- Jersey numbers floating above each 3D player model
+- Better humanoid geometry: more anatomically correct proportions, visible shorts, better helmets
 
 ### Modify
-- `PhysicsWorld.tsx`: Integrate timing quality (perfect/early/late) from timing meter into ball velocity on hit. Edge shots go to slip region, misses don't apply swing.
-- `CameraController.tsx`: Add stadium-view and fielder-zoom camera modes with lerp transitions.
-- `HUD.tsx`: Add timing meter UI, speed meter UI, length selector buttons, umpire signal overlay.
-- `gameStore.ts`: Add `timingQuality` state, `bowlingLength` state, `bowlingSpeed` state, fielder positions, umpire signal state.
-- `App.tsx`: Add fielder components and umpire component to the 3D scene.
+- Improve batting controls layout — make them even more compact (bottom strip, one row)
+- Controls show only when needed (batting controls appear only when ball is bowled, bowling controls only when setting up)
+- Improve player rendering: distinct shorts vs top, visible pads, helmet with grill
+- Improve loft shot visual — ball arcs higher, camera follows the arc
+- More realistic ball physics with proper bounce height variation based on pitch length
 
 ### Remove
-- Nothing removed; features are additive.
+- Nothing to remove
 
 ## Implementation Plan
-1. Update `gameStore.ts` with new state: timingQuality, bowlingLength, bowlingSpeed, umpireSignal, fielderStates
-2. Add `sharedRefs` for timing meter value and speed meter value
-3. Create `Fielders.tsx` - 6 fielder meshes with run/dive/throw AI logic using useFrame
-4. Create `Umpire.tsx` - 3D umpire with arm signal animations triggered by game events
-5. Update `HUD.tsx` - timing meter bar, speed meter bar, length selector (Full/Good/Short buttons)
-6. Update `PhysicsWorld.tsx` - use timingQuality to modify hit velocity; use bowlingLength to adjust ball launch angle/speed
-7. Update `CameraController.tsx` - stadium-view when ball y > 3, fielder-zoom when descending
-8. Update `App.tsx` - add Fielders and Umpire to scene
+1. Add ball-trail using Points/Line geometry that tracks last N ball positions
+2. Add dust puff: simple expanding ring of particles at bounce point, fades quickly
+3. Add difficulty UI panel (3 buttons: Easy/Medium/Hard) accessible from main HUD
+4. Add match stats modal (table of batsmen scores + bowling figures)
+5. Jersey number sprites above each fielder/batsman/bowler head
+6. Refine player geometries for more human proportions with visible shorts and gear
+7. Consolidate batting/bowling control panels to single-row compact strips
+8. Camera arc tracking for loft shots

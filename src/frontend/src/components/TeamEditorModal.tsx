@@ -25,6 +25,7 @@ export default function TeamEditorModal({ open, onClose }: Props) {
   const [padsColor, setPadsColor] = useState(store.padsColor);
   const [glovesColor, setGlovesColor] = useState(store.glovesColor);
   const [skinTone, setSkinTone] = useState(store.skinTone);
+  const [facePreview, setFacePreview] = useState<string>(store.faceTexture);
   const [players, setPlayers] = useState<Player[]>(() =>
     store.players.map((p) => ({ ...p })),
   );
@@ -41,6 +42,7 @@ export default function TeamEditorModal({ open, onClose }: Props) {
       setPadsColor(store.padsColor);
       setGlovesColor(store.glovesColor);
       setSkinTone(store.skinTone);
+      setFacePreview(store.faceTexture);
       setPlayers(store.players.map((p) => ({ ...p })));
     }
   }, [
@@ -55,6 +57,7 @@ export default function TeamEditorModal({ open, onClose }: Props) {
     store.padsColor,
     store.glovesColor,
     store.skinTone,
+    store.faceTexture,
     store.players,
   ]);
 
@@ -69,6 +72,7 @@ export default function TeamEditorModal({ open, onClose }: Props) {
   };
 
   const handleSave = () => {
+    store.setFaceTexture(facePreview);
     store.setTeamSettings({
       teamName,
       opponentName,
@@ -278,6 +282,67 @@ export default function TeamEditorModal({ open, onClose }: Props) {
                       value={batColor}
                       onChange={setBatColor}
                     />
+                    {/* Face Texture Slot */}
+                    <div className="flex flex-col gap-2 items-center">
+                      <Label className="text-white/50 text-xs uppercase tracking-wider">
+                        Face Texture
+                      </Label>
+                      <button
+                        type="button"
+                        className="relative w-12 h-12 rounded-xl cursor-pointer flex items-center justify-center overflow-hidden transition-all duration-200"
+                        style={{
+                          background: "rgba(255,255,255,0.05)",
+                          border: facePreview
+                            ? "2px solid rgba(243,108,33,0.7)"
+                            : "2px dashed rgba(255,255,255,0.2)",
+                        }}
+                        onClick={() => {
+                          const inp = document.getElementById(
+                            "te-face-texture-input",
+                          ) as HTMLInputElement;
+                          inp?.click();
+                        }}
+                        data-ocid="team_editor.upload_button"
+                      >
+                        {facePreview ? (
+                          <img
+                            src={facePreview}
+                            alt="Face"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-2xl select-none">👤</span>
+                        )}
+                        <input
+                          id="te-face-texture-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              setFacePreview(ev.target?.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                            e.target.value = "";
+                          }}
+                        />
+                      </button>
+                      {facePreview ? (
+                        <button
+                          type="button"
+                          className="text-white/40 hover:text-orange-400 text-xs transition-colors"
+                          onClick={() => setFacePreview("")}
+                          data-ocid="team_editor.delete_button"
+                        >
+                          ✕ Clear
+                        </button>
+                      ) : (
+                        <span className="text-white/25 text-xs">face.png</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

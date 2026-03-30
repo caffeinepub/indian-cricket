@@ -3,6 +3,9 @@ import { create } from "zustand";
 export type BallState = "idle" | "bowled" | "hit" | "dead";
 export type UmpireSignal = "none" | "four" | "six" | "out" | "wide";
 export type BowlingLength = "full" | "good" | "short";
+export type FootPosition = "front" | "back" | "advance" | "leave";
+export type ShotType = "push" | "stroke" | "loft";
+export type Difficulty = "easy" | "medium" | "hard";
 
 export interface Player {
   id: number;
@@ -47,6 +50,29 @@ interface InningsScore {
   balls: number;
 }
 
+function loadFromStorage(): Partial<TeamSettings> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<TeamSettings>;
+      if (parsed.players) {
+        parsed.players = parsed.players.map((p, i) => {
+          if (typeof p.id === "number") return p;
+          return { ...p, id: i + 1 };
+        });
+      }
+      return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+const saved = loadFromStorage();
+
+let umpireResetTimer: ReturnType<typeof setTimeout> | null = null;
+
 interface GameStore extends TeamSettings {
   runs: number;
   wickets: number;
@@ -60,13 +86,23 @@ interface GameStore extends TeamSettings {
   replayActive: boolean;
   replayEvent: string;
 
-  // New: bowling controls
+  // Bowling controls
   bowlingLength: BowlingLength;
   setBowlingLength: (l: BowlingLength) => void;
-  bowlingSpeed: number; // 0-100
+  bowlingSpeed: number;
   setBowlingSpeed: (s: number) => void;
 
-  // New: umpire
+  // Batting controls
+  footPosition: FootPosition;
+  setFootPosition: (f: FootPosition) => void;
+  shotType: ShotType;
+  setShotType: (t: ShotType) => void;
+
+  // Difficulty
+  difficulty: Difficulty;
+  setDifficulty: (d: Difficulty) => void;
+
+  // Umpire
   umpireSignal: UmpireSignal;
   setUmpireSignal: (s: UmpireSignal) => void;
 
@@ -101,36 +137,14 @@ interface GameStore extends TeamSettings {
   setTeamSettings: (settings: Partial<TeamSettings>) => void;
   saveTeamSettings: () => void;
   loadTeamSettings: () => void;
+  faceTexture: string;
+  setFaceTexture: (url: string) => void;
   startMultiplayer: (maxOvers: number) => void;
   endInnings: () => void;
   startInnings2: () => void;
   endGame: () => void;
   resetMultiplayer: () => void;
 }
-
-function loadFromStorage(): Partial<TeamSettings> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<TeamSettings>;
-      if (parsed.players) {
-        parsed.players = parsed.players.map((p, i) => {
-          if (typeof p.id === "number") return p;
-          return { ...p, id: i + 1 };
-        });
-      }
-      return parsed;
-    }
-  } catch {
-    // ignore
-  }
-  return {};
-}
-
-const saved = loadFromStorage();
-
-// Umpire signal auto-reset timers
-let umpireResetTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   runs: 0,
@@ -150,6 +164,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   bowlingSpeed: 50,
   setBowlingSpeed: (s) => set({ bowlingSpeed: s }),
 
+  footPosition: "front",
+  setFootPosition: (f) => set({ footPosition: f }),
+  shotType: "stroke",
+  setShotType: (t) => set({ shotType: t }),
+
+  difficulty: "medium",
+  setDifficulty: (d) => set({ difficulty: d }),
+
   umpireSignal: "none",
   setUmpireSignal: (s) => {
     if (umpireResetTimer) clearTimeout(umpireResetTimer);
@@ -162,8 +184,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  teamName: saved.teamName ?? "India",
-  opponentName: saved.opponentName ?? "Australia",
+  teamName: saved.teamName ?? "IND",
+  opponentName: saved.opponentName ?? "AUS",
   players: saved.players ?? DEFAULT_PLAYERS,
   primaryColor: saved.primaryColor ?? "#F36C21",
   secondaryColor: saved.secondaryColor ?? "#138808",
@@ -173,6 +195,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   padsColor: saved.padsColor ?? "#e8e8e8",
   glovesColor: saved.glovesColor ?? "#dddddd",
   skinTone: saved.skinTone ?? "#f5c5a3",
+  faceTexture: "",
 
   lightingMode: "day",
   setLightingMode: (m) => set({ lightingMode: m }),
@@ -274,31 +297,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
-      /* ignore */
+      // ignore
     }
   },
 
   loadTeamSettings: () => {
     const data = loadFromStorage();
-    set((s) => ({ ...s, ...data }));
+    if (Object.keys(data).length > 0) set((s) => ({ ...s, ...data }));
   },
+
+  setFaceTexture: (url) => set({ faceTexture: url }),
 
   startMultiplayer: (maxOvers: number) =>
     set({
       multiplayerEnabled: true,
       maxOvers,
       currentInnings: 1,
+      innings1Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
+      innings2Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
+      inningsBreak: false,
+      gameOver: false,
       currentBattingPlayer: 2,
       runs: 0,
       wickets: 0,
       balls: 0,
       overs: 0,
-      innings1Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
-      innings2Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
-      inningsBreak: false,
-      gameOver: false,
       ballState: "idle",
-      lastEvent: "",
     }),
 
   endInnings: () => {
@@ -312,7 +336,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
           balls: s.balls,
         },
         inningsBreak: true,
-        ballState: "idle",
       });
     } else {
       set({
@@ -323,12 +346,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           balls: s.balls,
         },
         gameOver: true,
-        ballState: "idle",
       });
     }
   },
 
-  startInnings2: () =>
+  startInnings2: () => {
     set({
       currentInnings: 2,
       currentBattingPlayer: 1,
@@ -336,27 +358,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
       wickets: 0,
       balls: 0,
       overs: 0,
-      inningsBreak: false,
       ballState: "idle",
-      lastEvent: "",
-    }),
+      inningsBreak: false,
+    });
+  },
 
   endGame: () => set({ gameOver: true }),
 
   resetMultiplayer: () =>
     set({
       multiplayerEnabled: false,
-      gameOver: false,
-      inningsBreak: false,
       currentInnings: 1,
+      innings1Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
+      innings2Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
+      inningsBreak: false,
+      gameOver: false,
       currentBattingPlayer: 2,
       runs: 0,
       wickets: 0,
       balls: 0,
       overs: 0,
-      innings1Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
-      innings2Score: { runs: 0, wickets: 0, overs: 0, balls: 0 },
-      lastEvent: "",
       ballState: "idle",
     }),
 }));

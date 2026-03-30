@@ -13,7 +13,6 @@ export default function Umpire() {
   const armLRef = useRef<THREE.Mesh>(null);
   const armRRef = useRef<THREE.Mesh>(null);
 
-  // Target rotations for arms [z rotation]
   const targetArmL = useRef<THREE.Euler>(new THREE.Euler(0, 0, 0.35));
   const targetArmR = useRef<THREE.Euler>(new THREE.Euler(0, 0, -0.35));
 
@@ -44,7 +43,6 @@ export default function Umpire() {
       0.1,
     );
 
-    // Gentle wave for FOUR signal
     if (umpireSignal === "four" && groupRef.current) {
       groupRef.current.rotation.y = Math.sin(Date.now() / 200) * 0.25;
     } else if (groupRef.current) {
@@ -61,12 +59,40 @@ export default function Umpire() {
       {/* White coat body */}
       <mesh position={[0, 0.75, 0]} castShadow>
         <cylinderGeometry args={[0.24, 0.28, 0.95, 8]} />
-        <meshStandardMaterial color="#f5f5f0" roughness={0.55} />
+        <meshPhysicalMaterial
+          color="#f5f5f0"
+          roughness={0.55}
+          metalness={0}
+          sheen={0.5}
+          sheenRoughness={0.7}
+        />
       </mesh>
+
+      {/* Left trouser leg (dark) */}
+      <mesh position={[-0.13, 0.22, 0]} castShadow>
+        <cylinderGeometry args={[0.09, 0.08, 0.5, 8]} />
+        <meshStandardMaterial color="#2c2c2c" roughness={0.7} />
+      </mesh>
+      {/* Right trouser leg */}
+      <mesh position={[0.13, 0.22, 0]} castShadow>
+        <cylinderGeometry args={[0.09, 0.08, 0.5, 8]} />
+        <meshStandardMaterial color="#2c2c2c" roughness={0.7} />
+      </mesh>
+      {/* Left black shoe */}
+      <mesh position={[-0.13, 0.03, 0.05]} castShadow>
+        <boxGeometry args={[0.12, 0.06, 0.22]} />
+        <meshStandardMaterial color="#111111" roughness={0.5} metalness={0.1} />
+      </mesh>
+      {/* Right black shoe */}
+      <mesh position={[0.13, 0.03, 0.05]} castShadow>
+        <boxGeometry args={[0.12, 0.06, 0.22]} />
+        <meshStandardMaterial color="#111111" roughness={0.5} metalness={0.1} />
+      </mesh>
+
       {/* Head */}
       <mesh position={[0, 1.5, 0]} castShadow>
         <sphereGeometry args={[0.23, 12, 12]} />
-        <meshStandardMaterial color="#c68642" roughness={0.7} />
+        <meshPhysicalMaterial color="#c68642" roughness={0.85} metalness={0} />
       </mesh>
       {/* Hat */}
       <mesh position={[0, 1.75, 0]}>
@@ -76,21 +102,24 @@ export default function Umpire() {
       {/* Left arm */}
       <mesh ref={armLRef} position={[-0.42, 0.88, 0]} rotation={[0, 0, 0.35]}>
         <cylinderGeometry args={[0.08, 0.08, 0.58, 6]} />
-        <meshStandardMaterial color="#f5f5f0" roughness={0.55} />
+        <meshPhysicalMaterial
+          color="#f5f5f0"
+          roughness={0.55}
+          metalness={0}
+          sheen={0.5}
+          sheenRoughness={0.7}
+        />
       </mesh>
       {/* Right arm */}
       <mesh ref={armRRef} position={[0.42, 0.88, 0]} rotation={[0, 0, -0.35]}>
         <cylinderGeometry args={[0.08, 0.08, 0.58, 6]} />
-        <meshStandardMaterial color="#f5f5f0" roughness={0.55} />
-      </mesh>
-      {/* Legs */}
-      <mesh position={[-0.13, 0.2, 0]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.5, 6]} />
-        <meshStandardMaterial color="#f5f5dc" roughness={0.5} />
-      </mesh>
-      <mesh position={[0.13, 0.2, 0]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.5, 6]} />
-        <meshStandardMaterial color="#f5f5dc" roughness={0.5} />
+        <meshPhysicalMaterial
+          color="#f5f5f0"
+          roughness={0.55}
+          metalness={0}
+          sheen={0.5}
+          sheenRoughness={0.7}
+        />
       </mesh>
     </group>
   );
@@ -103,27 +132,22 @@ function applySignalPose(
 ) {
   switch (signal) {
     case "four":
-      // Both arms horizontal, waving
       leftArm.current.set(0, 0, Math.PI / 2);
       rightArm.current.set(0, 0, -Math.PI / 2);
       break;
     case "six":
-      // Both arms straight up
       leftArm.current.set(0, 0, Math.PI);
       rightArm.current.set(0, 0, -Math.PI);
       break;
     case "out":
-      // Right arm / finger raised
       leftArm.current.set(0, 0, 0.35);
       rightArm.current.set(0, 0, -Math.PI * 0.9);
       break;
     case "wide":
-      // One arm extended to side
       leftArm.current.set(0, 0, 0.35);
       rightArm.current.set(0, 0, -Math.PI / 2);
       break;
     default:
-      // Rest position
       leftArm.current.set(0, 0, 0.35);
       rightArm.current.set(0, 0, -0.35);
   }
